@@ -7,6 +7,9 @@ the instruction data baked in, so `manim render` can produce actual MP4s.
 from __future__ import annotations
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 BACKGROUND_COLOR = "#333333"
 TEXT_COLOR = "#FFFFFF"
@@ -32,6 +35,11 @@ def generate_scene_code(instruction: dict) -> str:
         "bullet_reveal": _gen_bullet_reveal,
         "comparison": _gen_comparison,
         "fullscreen_statement": _gen_fullscreen_statement,
+        "data_chart": _gen_data_chart,
+        "timeseries": _gen_timeseries,
+        "horizontal_bar": _gen_horizontal_bar,
+        "grouped_bar": _gen_grouped_bar,
+        "donut": _gen_donut_chart,
     }
     gen = generators.get(vis_type, _gen_text_overlay)
     return gen(instruction)
@@ -52,6 +60,11 @@ def get_scene_class_name(instruction: dict) -> str:
         "bullet_reveal": "BulletRevealScene",
         "comparison": "ComparisonScene",
         "fullscreen_statement": "FullscreenStatementScene",
+        "data_chart": "DataChartScene",
+        "timeseries": "TimeseriesScene",
+        "horizontal_bar": "HorizontalBarScene",
+        "grouped_bar": "GroupedBarScene",
+        "donut": "DonutChartScene",
     }
     return names.get(instruction.get("type", "text_overlay"), "TextOverlayScene")
 
@@ -567,4 +580,485 @@ class FullscreenStatementScene(Scene):
         self.play(FadeIn(group, shift=UP * 0.3), run_time=0.7)
         self.wait(3.5)
         self.play(FadeOut(group, shift=DOWN * 0.2), run_time=0.4)
+'''
+
+
+# ── Yahoo Finance enrichment ──────────────────────────────────────────────
+
+
+def _enrich_from_yahoo(data: dict) -> dict:
+    """Fetch live price history from Yahoo Finance if data has ticker fields.
+
+    Only runs when data doesn't already have `values`/`series` populated.
+    Returns enriched copy of data dict.
+    """
+    tickers = data.get("tickers") or []
+    single = data.get("ticker", "")
+    if single and single not in tickers:
+        tickers = [single] + tickers
+    if not tickers:
+        return data
+
+    if data.get("values") or data.get("series"):
+        return data
+
+    period = data.get("period", "1y")
+    interval = data.get("interval", "1wk")
+    value_type = data.get("value_type", "close")
+
+    try:
+        import yfinance as yf
+
+        series_list = []
+        all_dates = None
+
+        for symbol in tickers[:5]:
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(period=period, interval=interval)
+            if hist.empty:
+                logger.warning("No Yahoo Finance data for %s", symbol)
+                continue
+
+            dates = [d.strftime("%Y-%m-%d") for d in hist.index]
+            if all_dates is None:
+                all_dates = dates
+
+            if value_type == "pct_change":
+                base = hist["Close"].iloc[0]
+                values = [round(((v / base) - 1) * 100, 2) for v in hist["Close"]]
+            else:
+                values = [round(float(v), 2) for v in hist["Close"]]
+
+            series_list.append({"name": symbol, "values": values})
+
+        if series_list and all_dates:
+            data = dict(data)
+            data["dates"] = all_dates
+            data["series"] = series_list
+            if "chart_type" not in data:
+                data["chart_type"] = "timeseries"
+            if not data.get("source"):
+                data["source"] = "Yahoo Finance"
+            logger.info(
+                "Enriched chart with Yahoo Finance: %d tickers, %d points",
+                len(series_list), len(all_dates),
+            )
+    except ImportError:
+        logger.warning("yfinance not installed — skipping enrichment")
+    except Exception as exc:
+        logger.warning("Yahoo Finance enrichment failed: %s", exc)
+
+    return data
+
+
+# ── Data chart dispatcher (replaces data_chart_renderer.py) ───────────────
+
+
+def _gen_data_chart(instruction: dict) -> str:
+    """Route a data_chart instruction to the appropriate Manim generator.
+
+    Handles yfinance enrichment, then dispatches by chart_type.
+    """
+    data = instruction.get("data", {})
+    data = _enrich_from_yahoo(data)
+    instruction = dict(instruction, data=data)
+
+    chart_type = data.get("chart_type", "bar")
+    router = {
+        "bar": _gen_bar_chart,
+        "line": _gen_line_chart,
+        "area": _gen_line_chart,
+        "pie": _gen_pie_chart,
+        "donut": _gen_donut_chart,
+        "timeseries": _gen_timeseries,
+        "horizontal_bar": _gen_horizontal_bar,
+        "grouped_bar": _gen_grouped_bar,
+    }
+    gen = router.get(chart_type, _gen_bar_chart)
+    return gen(instruction)
+
+
+# ── Timeseries (multi-line, animated draw) ────────────────────────────────
+
+
+def _gen_timeseries(instruction: dict) -> str:
+    data = instruction.get("data", {})
+    title = instruction.get("title", "")
+    dates = data.get("dates", []) or data.get("labels", [])
+    series_list = data.get("series", [])
+    if not series_list and "values" in data:
+        series_list = [{"name": data.get("series_name", ""), "values": data["values"]}]
+    source = data.get("source", "")
+    is_pct = data.get("value_type") == "pct_change"
+
+    colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(series_list))]
+
+    return f'''from manim import *
+import numpy as np
+
+class TimeseriesScene(Scene):
+    def construct(self):
+        self.camera.background_color = "{BG_DARK}"
+
+        # Title
+        title = Text({json.dumps(title)}, font_size=30, color="{TEXT_COLOR}", weight=BOLD)
+        title.to_edge(UP, buff=0.3)
+        self.play(FadeIn(title), run_time=0.4)
+
+        series_list = {json.dumps(series_list)}
+        dates = {json.dumps(dates)}
+        colors = {json.dumps(colors)}
+        is_pct = {json.dumps(is_pct)}
+        source = {json.dumps(source)}
+
+        n = len(dates)
+        if n < 2 or not series_list:
+            self.wait(3)
+            return
+
+        # Compute global y range
+        all_vals = [v for s in series_list for v in s.get("values", [])]
+        y_min = min(0, min(all_vals)) if all_vals else 0
+        y_max = max(all_vals) * 1.15 if all_vals else 10
+        if y_max == y_min:
+            y_max = y_min + 10
+
+        axes = Axes(
+            x_range=[0, n - 1, max(1, n // 6)],
+            y_range=[y_min, y_max, (y_max - y_min) / 5],
+            x_length=10.5,
+            y_length=5,
+            axis_config={{"color": "#555555", "include_ticks": True}},
+        )
+        axes.next_to(title, DOWN, buff=0.35)
+
+        # X-axis date labels (show ~6 evenly spaced)
+        step = max(1, n // 6)
+        x_labels = VGroup()
+        for i in range(0, n, step):
+            if i < len(dates):
+                lbl = Text(dates[i][:7], font_size=12, color="{MUTED}")
+                lbl.next_to(axes.c2p(i, y_min), DOWN, buff=0.15)
+                x_labels.add(lbl)
+
+        self.play(Create(axes), FadeIn(x_labels), run_time=0.6)
+
+        # Zero line for pct_change
+        if is_pct and y_min < 0:
+            zero_line = DashedLine(
+                axes.c2p(0, 0), axes.c2p(n - 1, 0),
+                color="#666666", stroke_width=1,
+            )
+            self.play(Create(zero_line), run_time=0.2)
+
+        # Draw each series
+        legend_items = VGroup()
+        for idx, series in enumerate(series_list):
+            vals = [float(v) for v in series.get("values", [])][:n]
+            color = colors[idx % len(colors)]
+            name = series.get("name", "")
+
+            points = [axes.c2p(i, v) for i, v in enumerate(vals)]
+            line = VMobject(color=color, stroke_width=3)
+            line.set_points_smoothly(points)
+
+            # Animated draw
+            self.play(Create(line), run_time=1.2)
+
+            # End-of-line value badge
+            end_val = vals[-1]
+            if is_pct:
+                badge_text = f"+{{end_val:.1f}}%" if end_val >= 0 else f"{{end_val:.1f}}%"
+            else:
+                badge_text = f"${{end_val:,.0f}}" if end_val > 100 else f"{{end_val:,.2f}}"
+
+            badge = Text(badge_text, font_size=16, color=color, weight=BOLD)
+            badge.next_to(points[-1], RIGHT, buff=0.15)
+            self.play(FadeIn(badge), run_time=0.3)
+
+            # Legend entry
+            if name:
+                dot = Dot(radius=0.06, color=color)
+                lbl = Text(name, font_size=14, color="{TEXT_COLOR}")
+                entry = VGroup(dot, lbl).arrange(RIGHT, buff=0.1)
+                legend_items.add(entry)
+
+        if legend_items:
+            legend_items.arrange(RIGHT, buff=0.5)
+            legend_items.next_to(axes, DOWN, buff=0.5)
+            self.play(FadeIn(legend_items), run_time=0.3)
+
+        # Source label
+        if source:
+            src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
+            src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
+            self.play(FadeIn(src), run_time=0.2)
+
+        self.wait(3)
+        self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
+'''
+
+
+# ── Horizontal bar chart ──────────────────────────────────────────────────
+
+
+def _gen_horizontal_bar(instruction: dict) -> str:
+    data = instruction.get("data", {})
+    labels = data.get("labels", [])
+    values = data.get("values", [])
+    title = instruction.get("title", "")
+    source = data.get("source", "")
+    colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(labels))]
+
+    return f'''from manim import *
+
+class HorizontalBarScene(Scene):
+    def construct(self):
+        self.camera.background_color = "{BG_DARK}"
+
+        title = Text({json.dumps(title)}, font_size=30, color="{TEXT_COLOR}", weight=BOLD)
+        title.to_edge(UP, buff=0.3)
+        self.play(FadeIn(title), run_time=0.4)
+
+        labels = {json.dumps(labels)}
+        values = {json.dumps(values)}
+        colors = {json.dumps(colors)}
+        source = {json.dumps(source)}
+
+        if not values:
+            self.wait(3)
+            return
+
+        max_val = max(values) or 1
+        bar_height = min(0.5, 4.5 / max(len(labels), 1))
+        bar_max_width = 8.0
+        start_y = 2.0
+
+        bars = VGroup()
+        for i, (lbl, val, col) in enumerate(zip(labels, values, colors)):
+            y = start_y - i * (bar_height + 0.25)
+            width = (val / max_val) * bar_max_width
+
+            # Label on left
+            label = Text(lbl, font_size=18, color="{TEXT_COLOR}")
+            label.move_to(LEFT * 5.5 + UP * y)
+            label.align_to(LEFT * 5.5, RIGHT)
+
+            # Bar
+            bar = Rectangle(
+                width=0.01, height=bar_height,
+                color=col, fill_opacity=0.85, stroke_width=0,
+            )
+            bar.move_to(LEFT * 1.8 + UP * y, aligned_edge=LEFT)
+
+            # Value label
+            val_text = Text(f"{{val:,.0f}}", font_size=14, color=col, weight=BOLD)
+            val_text.next_to(bar, RIGHT, buff=0.15)
+
+            self.play(FadeIn(label), run_time=0.15)
+            self.play(
+                bar.animate.stretch_to_fit_width(max(width, 0.05)),
+                run_time=0.4,
+            )
+            val_text.next_to(bar, RIGHT, buff=0.15)
+            self.play(FadeIn(val_text), run_time=0.15)
+            bars.add(label, bar, val_text)
+
+        if source:
+            src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
+            src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
+            self.play(FadeIn(src), run_time=0.2)
+
+        self.wait(3)
+        self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
+'''
+
+
+# ── Grouped bar chart ────────────────────────────────────────────────────
+
+
+def _gen_grouped_bar(instruction: dict) -> str:
+    data = instruction.get("data", {})
+    labels = data.get("labels", [])
+    series_list = data.get("series", [])
+    title = instruction.get("title", "")
+    source = data.get("source", "")
+
+    if not series_list and "values" in data:
+        series_list = [{"name": "Series", "values": data["values"]}]
+
+    colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(series_list))]
+
+    return f'''from manim import *
+
+class GroupedBarScene(Scene):
+    def construct(self):
+        self.camera.background_color = "{BG_DARK}"
+
+        title = Text({json.dumps(title)}, font_size=30, color="{TEXT_COLOR}", weight=BOLD)
+        title.to_edge(UP, buff=0.3)
+        self.play(FadeIn(title), run_time=0.4)
+
+        labels = {json.dumps(labels)}
+        series_list = {json.dumps(series_list)}
+        colors = {json.dumps(colors)}
+        source = {json.dumps(source)}
+
+        if not series_list or not labels:
+            self.wait(3)
+            return
+
+        all_vals = [v for s in series_list for v in s.get("values", [])]
+        max_val = max(all_vals) if all_vals else 10
+
+        n_groups = len(labels)
+        n_series = len(series_list)
+        bar_w = min(0.4, 9.0 / (n_groups * n_series + n_groups))
+        group_gap = bar_w * 0.5
+
+        axes = Axes(
+            x_range=[0, n_groups, 1],
+            y_range=[0, max_val * 1.2, max_val * 0.25 or 1],
+            x_length=10.5,
+            y_length=5,
+            axis_config={{"color": "#555555"}},
+        )
+        axes.next_to(title, DOWN, buff=0.35)
+        self.play(Create(axes), run_time=0.5)
+
+        # X-axis labels
+        for i, lbl in enumerate(labels):
+            t = Text(lbl, font_size=14, color="{MUTED}")
+            t.next_to(axes.c2p(i + 0.5, 0), DOWN, buff=0.15)
+            self.add(t)
+
+        # Draw bars per group
+        legend_items = VGroup()
+        for g_idx in range(n_groups):
+            for s_idx, series in enumerate(series_list):
+                vals = series.get("values", [])
+                if g_idx >= len(vals):
+                    continue
+                val = vals[g_idx]
+                color = colors[s_idx % len(colors)]
+
+                x_center = g_idx + 0.5
+                x_offset = (s_idx - n_series / 2 + 0.5) * (bar_w + 0.05)
+                bottom = axes.c2p(x_center + x_offset, 0)
+                top = axes.c2p(x_center + x_offset, val)
+
+                bar = Rectangle(
+                    width=bar_w, height=abs(top[1] - bottom[1]),
+                    color=color, fill_opacity=0.85, stroke_width=0,
+                )
+                bar.move_to((bottom + top) / 2)
+                self.play(GrowFromEdge(bar, DOWN), run_time=0.15)
+
+        # Legend
+        for s_idx, series in enumerate(series_list):
+            name = series.get("name", "")
+            if name:
+                dot = Dot(radius=0.06, color=colors[s_idx % len(colors)])
+                lbl = Text(name, font_size=14, color="{TEXT_COLOR}")
+                entry = VGroup(dot, lbl).arrange(RIGHT, buff=0.1)
+                legend_items.add(entry)
+
+        if legend_items:
+            legend_items.arrange(RIGHT, buff=0.5)
+            legend_items.next_to(axes, DOWN, buff=0.5)
+            self.play(FadeIn(legend_items), run_time=0.3)
+
+        if source:
+            src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
+            src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
+            self.play(FadeIn(src), run_time=0.2)
+
+        self.wait(3)
+        self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
+'''
+
+
+# ── Donut chart ───────────────────────────────────────────────────────────
+
+
+def _gen_donut_chart(instruction: dict) -> str:
+    data = instruction.get("data", {})
+    labels = data.get("labels", [])
+    values = data.get("values", [])
+    title = instruction.get("title", "")
+    center_value = data.get("center_value", "")
+    center_label = data.get("center_label", "")
+    source = data.get("source", "")
+    colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(labels))]
+
+    return f'''from manim import *
+import numpy as np
+
+class DonutChartScene(Scene):
+    def construct(self):
+        self.camera.background_color = "{BG_DARK}"
+
+        title = Text({json.dumps(title)}, font_size=30, color="{TEXT_COLOR}", weight=BOLD)
+        title.to_edge(UP, buff=0.3)
+        self.play(FadeIn(title), run_time=0.4)
+
+        values = {json.dumps(values)}
+        labels = {json.dumps(labels)}
+        colors = {json.dumps(colors)}
+        center_value = {json.dumps(str(center_value))}
+        center_label = {json.dumps(center_label)}
+        source = {json.dumps(source)}
+
+        total = sum(values) or 1
+
+        # Build donut sectors
+        sectors = VGroup()
+        start_angle = PI / 2
+        for i, (val, col) in enumerate(zip(values, colors)):
+            angle = (val / total) * TAU
+            sector = AnnularSector(
+                inner_radius=1.2, outer_radius=2.3,
+                angle=angle, start_angle=start_angle,
+                color=col, fill_opacity=0.9,
+                stroke_color="#1a1a2e", stroke_width=3,
+            )
+            sectors.add(sector)
+            start_angle += angle
+
+        sectors.move_to(LEFT * 1.5 + DOWN * 0.3)
+
+        # Animate sectors one by one
+        for sector in sectors:
+            self.play(Create(sector), run_time=0.3)
+
+        # Center text
+        if center_value:
+            cv = Text(center_value, font_size=36, color="{TEXT_COLOR}", weight=BOLD)
+            cv.move_to(sectors.get_center() + UP * 0.1)
+            self.play(FadeIn(cv, scale=0.5), run_time=0.3)
+        if center_label:
+            cl = Text(center_label, font_size=16, color="{MUTED}")
+            cl.move_to(sectors.get_center() + DOWN * 0.35)
+            self.play(FadeIn(cl), run_time=0.2)
+
+        # Legend on right side
+        legend = VGroup()
+        for i, (lbl, val, col) in enumerate(zip(labels, values, colors)):
+            pct = val / total * 100
+            dot = Dot(radius=0.08, color=col)
+            text = Text(f"{{lbl}} ({{pct:.0f}}%)", font_size=16, color="{TEXT_COLOR}")
+            entry = VGroup(dot, text).arrange(RIGHT, buff=0.15)
+            legend.add(entry)
+
+        legend.arrange(DOWN, buff=0.25, aligned_edge=LEFT)
+        legend.move_to(RIGHT * 3.5 + DOWN * 0.3)
+        self.play(FadeIn(legend), run_time=0.4)
+
+        if source:
+            src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
+            src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
+            self.play(FadeIn(src), run_time=0.2)
+
+        self.wait(3)
+        self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
 '''

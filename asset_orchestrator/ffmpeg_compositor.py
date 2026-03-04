@@ -22,6 +22,42 @@ logger = logging.getLogger(__name__)
 WIDTH, HEIGHT = 1920, 1080
 
 
+def _gradient_scrim(
+    width: int = WIDTH,
+    height: int = HEIGHT,
+    *,
+    direction: str = "bottom",
+    opacity: int = 180,
+) -> Image.Image:
+    """Create a linear-gradient scrim (transparent → dark).
+
+    Args:
+        direction: Where the dark end sits — "bottom", "top", "center".
+        opacity: Peak alpha at the dark end (0–255).
+
+    Returns:
+        RGBA Image with gradient transparency.
+    """
+    import numpy as np
+
+    if direction == "center":
+        cy = height / 2
+        ys = np.abs(np.arange(height) - cy) / cy  # 0 at center, 1 at edges
+        alpha_col = (opacity * (1.0 - ys ** 1.4)).clip(0, 255).astype(np.uint8)
+    elif direction == "top":
+        t = np.arange(height) / height
+        alpha_col = (opacity * (1.0 - t ** 1.6)).clip(0, 255).astype(np.uint8)
+    else:  # "bottom" (default)
+        t = np.arange(height) / height
+        alpha_col = (opacity * t ** 1.6).clip(0, 255).astype(np.uint8)
+
+    # Build RGBA array: black with varying alpha
+    arr = np.zeros((height, width, 4), dtype=np.uint8)
+    arr[:, :, 3] = alpha_col[:, np.newaxis]  # broadcast alpha across width
+
+    return Image.fromarray(arr, "RGBA")
+
+
 class FFmpegCompositor:
     """Compose stock footage with text overlays using Pillow + FFmpeg overlay."""
 
@@ -256,8 +292,9 @@ class FFmpegCompositor:
         overlay_png = self._gen_output_path("overlay").replace(".mp4", ".png")
 
         img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-        # Dark scrim — semi-transparent
-        scrim = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 128))
+        # Gradient scrim — dark at text position, transparent elsewhere
+        grad_dir = "bottom" if position in ("lower_third", "bottom") else "center"
+        scrim = _gradient_scrim(direction=grad_dir, opacity=160)
         img = Image.alpha_composite(img, scrim)
         draw = ImageDraw.Draw(img)
 
@@ -303,7 +340,7 @@ class FFmpegCompositor:
         overlay_png = self._gen_output_path("overlay").replace(".mp4", ".png")
 
         img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-        scrim = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 153))
+        scrim = _gradient_scrim(direction="center", opacity=170)
         img = Image.alpha_composite(img, scrim)
         draw = ImageDraw.Draw(img)
 
@@ -351,7 +388,7 @@ class FFmpegCompositor:
         overlay_png = self._gen_output_path("overlay").replace(".mp4", ".png")
 
         img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-        scrim = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 140))
+        scrim = _gradient_scrim(direction="center", opacity=160)
         img = Image.alpha_composite(img, scrim)
         draw = ImageDraw.Draw(img)
 
@@ -402,8 +439,8 @@ class FFmpegCompositor:
         overlay_png = self._gen_output_path("overlay").replace(".mp4", ".png")
 
         img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-        # Darker scrim for card readability
-        scrim = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 160))
+        # Gradient scrim for card readability
+        scrim = _gradient_scrim(direction="center", opacity=180)
         img = Image.alpha_composite(img, scrim)
         draw = ImageDraw.Draw(img)
 

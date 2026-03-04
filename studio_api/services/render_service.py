@@ -58,13 +58,19 @@ class RenderService:
             metadata=settings.model_dump(),
         )
 
-    def start_render(self, project_id: str) -> dict:
+    def start_render(self, project_id: str, existing_job_id: str | None = None) -> dict:
         """Start final video render — concat all rendered scenes with xfade transitions."""
         if self._job_runner is None:
             raise RuntimeError("JobRunner not configured")
 
-        job = self._job_runner.create_job(project_id, "render_final")
-        self._job_runner.start_job(job.id)
+        if existing_job_id:
+            job = self._job_runner.get_job(existing_job_id)
+            if job is None:
+                raise ValueError(f"Job {existing_job_id} not found")
+            self._job_runner.start_job(job.id)
+        else:
+            job = self._job_runner.create_job(project_id, "render_final")
+            self._job_runner.start_job(job.id)
         try:
             import os
             import subprocess

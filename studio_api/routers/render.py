@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -14,6 +15,8 @@ from studio_api.services.project_service import ProjectService
 from studio_api.services.render_service import RenderService
 
 router = APIRouter(prefix="/api/projects/{project_id}/render", tags=["render"])
+
+_logger = logging.getLogger(__name__)
 
 
 class ReorderRequest(BaseModel):
@@ -35,19 +38,32 @@ def _verify_project(project_id: str, conn: sqlite3.Connection = Depends(get_db))
 
 @router.post("", status_code=202)
 def start_render(
+    background_tasks: BackgroundTasks,
     project_id: str = Depends(_verify_project),
-    service: RenderService = Depends(_get_render_service),
+    conn: sqlite3.Connection = Depends(get_db),
 ) -> dict:
-    try:
-        return service.start_render(project_id)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail={
-            "type": "validation_error", "message": str(e)
-        })
-    except Exception as e:
-        raise HTTPException(status_code=502, detail={
-            "type": "external_error", "message": str(e)
-        })
+    """Kick off final render in background. Returns immediately with job_id."""
+    # Pre-create the job so we can return the ID immediately
+    job_runner = JobRunner(conn)
+    job = job_runner.create_job(project_id, "render_final")
+
+    def _do_render() -> None:
+        import sqlite3 as _sqlite3
+        from studio_api.dependencies import get_db_path
+        bg_conn = _sqlite3.connect(get_db_path(), timeout=30)
+        bg_conn.row_factory = _sqlite3.Row
+        bg_conn.execute("PRAGMA journal_mode=WAL")
+        bg_conn.execute("PRAGMA busy_timeout=30000")
+        try:
+            svc = RenderService(bg_conn, job_runner=JobRunner(bg_conn))
+            svc.start_render(project_id, existing_job_id=job.id)
+        except Exception:
+            _logger.exception("Background final render failed for project %s", project_id)
+        finally:
+            bg_conn.close()
+
+    background_tasks.add_task(_do_render)
+    return {"job_id": job.id, "status": "PENDING"}
 
 
 @router.get("/status")

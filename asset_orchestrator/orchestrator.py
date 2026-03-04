@@ -119,9 +119,36 @@ class AssetOrchestrator:
                     instruction, audio_path, narration_text
                 )
 
-            # ── Data chart pipeline (matplotlib + FFmpeg) ──
+            # ── Data chart pipeline (Manim — yfinance enrichment in codegen) ──
             if inst_type == "data_chart":
-                return self._process_data_chart(instruction, audio_path, narration_text)
+                # Enrich data with yfinance if needed, then route through Manim
+                from asset_orchestrator.manim_codegen import _enrich_from_yahoo
+                data = instruction.get("data", {})
+                enriched = _enrich_from_yahoo(data)
+                instruction = dict(instruction, data=enriched, type="data_chart")
+                scene = self._mapper.map(instruction)
+
+                self._logger.info("Render start (data_chart): title=%s", inst_title)
+                start = time.time()
+
+                duration = instruction.get("target_duration") or enriched.get("duration")
+                if duration is None and narration_text:
+                    word_count = len(narration_text.split())
+                    duration = max(3.0, (word_count / 150) * 60)
+                duration = duration or 8.0
+
+                video_path = self._renderer.render(scene, instruction)
+                elapsed_ms = (time.time() - start) * 1000
+                self._logger.info(
+                    "Data chart render complete: title=%s, chart_type=%s, %.1fs, elapsed=%.1fms",
+                    inst_title, enriched.get("chart_type", "bar"), duration, elapsed_ms,
+                )
+
+                output_path = video_path
+                if audio_path and self._ffmpeg:
+                    output_path = self._ffmpeg.compose(audio_path, video_path)
+
+                return {"status": "success", "output_path": output_path}
 
             # ── Manim pipeline (existing) ──
             scene = self._mapper.map(instruction)
@@ -495,38 +522,6 @@ class AssetOrchestrator:
 
         return result
 
-    def _process_data_chart(
-        self,
-        instruction: dict,
-        audio_path: str | None = None,
-        narration_text: str | None = None,
-    ) -> dict:
-        """Process a data_chart scene via matplotlib + FFmpeg."""
-        from asset_orchestrator.data_chart_renderer import render_data_chart
-
-        inst_title = instruction.get("title", "untitled")
-        data = instruction.get("data", {})
-        start = time.time()
-
-        # Use target_duration (from audio) first, then data.duration, then estimate
-        duration = instruction.get("target_duration") or data.get("duration")
-        if duration is None and narration_text:
-            word_count = len(narration_text.split())
-            duration = max(3.0, (word_count / 150) * 60)
-        duration = duration or 8.0
-
-        output_dir = os.path.abspath(self._render_config.output_dir or "output/charts")
-        output_path = render_data_chart(instruction, output_dir=output_dir, duration=duration)
-
-        if audio_path and self._ffmpeg:
-            output_path = self._ffmpeg.compose(audio_path, output_path)
-
-        elapsed_ms = (time.time() - start) * 1000
-        self._logger.info(
-            "Data chart complete: title=%s, chart_type=%s, %.1fs, elapsed=%.1fms",
-            inst_title, data.get("chart_type", "bar"), duration, elapsed_ms,
-        )
-        return {"status": "success", "output_path": output_path}
 
 
     def process_batch(

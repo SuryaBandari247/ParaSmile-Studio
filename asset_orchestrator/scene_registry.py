@@ -75,6 +75,12 @@ class SceneRegistry:
             "stock_with_text": StockWithTextScene,
             "stock_with_stat": StockWithStatScene,
             "stock_quote": StockQuoteScene,
+            # Data chart types — routed through Manim codegen
+            "data_chart": BarChartScene,
+            "timeseries": LineChartScene,
+            "horizontal_bar": BarChartScene,
+            "grouped_bar": BarChartScene,
+            "donut": PieChartScene,
         }
 
     def get(self, type_key: str) -> type:
