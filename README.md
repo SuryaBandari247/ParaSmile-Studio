@@ -1,6 +1,6 @@
-# ParaSmile Studio
+# Calm Capitalist
 
-Python-based YouTube Data API scraper for discovering trending technical topics. Part of ParaSmile Studio.
+Python-based YouTube Data API scraper for discovering trending technical topics. Part of Calm Capitalist.
 
 ## Setup
 
@@ -213,4 +213,4 @@ The rate limiter:
 
 ## License
 
-Proprietary - ParaSmile Studio
+Proprietary - Calm Capitalist

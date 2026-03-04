@@ -2,7 +2,7 @@
 Asset Orchestrator - Transforms visual instructions into production-ready video assets.
 
 This module sits between the Script Generator and the final video assembly pipeline
-in ParaSmile Studio. It maps visual instructions to Manim Scene
+in Calm Capitalist. It maps visual instructions to Manim Scene
 classes for code-generated animations, provides reusable chart templates, and wraps
 FFmpeg for compositing audio with rendered MP4 animations.
 

@@ -82,7 +82,7 @@ class WikipediaEventsClient:
         """Initialize Wikipedia Events client."""
         self._session = requests.Session()
         self._session.headers.update({
-            "User-Agent": "ParaSmileStudio/1.0 (research-agent)"
+            "User-Agent": "CalmCapitalist/1.0 (research-agent)"
         })
         logger.info("WikipediaEventsClient initialized")
 

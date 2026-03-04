@@ -1,6 +1,6 @@
 """Pipeline UI — Streamlit web application for the content production pipeline.
 
-Provides a human-in-the-loop interface for ParaSmile Studio,
+Provides a human-in-the-loop interface for Calm Capitalist,
 guiding the user through trend research, topic selection, script input,
 conversion, and VideoScript review.
 """

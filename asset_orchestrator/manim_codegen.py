@@ -95,19 +95,27 @@ def _gen_bar_chart(instruction: dict) -> str:
     labels = data.get("labels", [])
     values = data.get("values", [])
     title = instruction.get("title", "")
+    source = data.get("source", "")
+    highlights = data.get("highlights", [])
     colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(labels))]
     return f'''from manim import *
 
 class BarChartScene(Scene):
     def construct(self):
-        self.camera.background_color = "{BACKGROUND_COLOR}"
-        title = Text({json.dumps(title)}, font_size=32, color="{TEXT_COLOR}")
+        self.camera.background_color = "{BG_DARK}"
+        title = Text({json.dumps(title)}, font_size=32, color="{TEXT_COLOR}", weight=BOLD)
         title.to_edge(UP, buff=0.3)
         self.play(FadeIn(title), run_time=0.4)
 
         labels = {json.dumps(labels)}
         values = {json.dumps(values)}
         colors = {json.dumps(colors)}
+        source = {json.dumps(source)}
+        highlights = {json.dumps(highlights)}
+
+        if not values:
+            self.wait(3)
+            return
 
         chart = BarChart(
             values=values,
@@ -118,9 +126,38 @@ class BarChartScene(Scene):
             y_length=5,
         )
         chart.next_to(title, DOWN, buff=0.4)
-        self.play(Create(chart), run_time=1.5)
+
+        # Progressive bar reveal — bars grow one by one
+        self.play(Create(chart.get_axes()), run_time=0.5)
+        for bar in chart.bars:
+            self.play(GrowFromEdge(bar, DOWN), run_time=0.2)
+
+        # Value labels on top of bars
+        value_labels = VGroup()
+        for i, (bar, val) in enumerate(zip(chart.bars, values)):
+            lbl = Text(f"{{val:,.0f}}", font_size=14, color=colors[i % len(colors)], weight=BOLD)
+            lbl.next_to(bar, UP, buff=0.1)
+            value_labels.add(lbl)
+        self.play(FadeIn(value_labels), run_time=0.3)
+
+        # Indicate the highest bar
+        if values:
+            max_idx = values.index(max(values))
+            self.play(Indicate(chart.bars[max_idx], scale_factor=1.1, color="#ff6b6b"), run_time=0.4)
+
+        # Indicate specific highlights
+        for hl in highlights:
+            idx = hl.get("index")
+            if idx is not None and idx < len(chart.bars):
+                self.play(Indicate(chart.bars[idx], scale_factor=1.1, color="#ff6b6b"), run_time=0.3)
+
+        if source:
+            src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
+            src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
+            self.play(FadeIn(src), run_time=0.2)
+
         self.wait(3)
-        self.play(FadeOut(chart), FadeOut(title), run_time=0.5)
+        self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
 '''
 
 
@@ -129,39 +166,89 @@ def _gen_line_chart(instruction: dict) -> str:
     labels = data.get("labels", [])
     values = data.get("values", [])
     title = instruction.get("title", "")
+    source = data.get("source", "")
+    highlights = data.get("highlights", [])
     return f'''from manim import *
 import numpy as np
 
-class LineChartScene(Scene):
+class LineChartScene(MovingCameraScene):
     def construct(self):
-        self.camera.background_color = "{BACKGROUND_COLOR}"
-        title = Text({json.dumps(title)}, font_size=32, color="{TEXT_COLOR}")
+        self.camera.background_color = "{BG_DARK}"
+        self.camera.frame.save_state()
+
+        title = Text({json.dumps(title)}, font_size=32, color="{TEXT_COLOR}", weight=BOLD)
         title.to_edge(UP, buff=0.3)
         self.play(FadeIn(title), run_time=0.4)
 
         values = {json.dumps(values)}
         labels = {json.dumps(labels)}
+        source = {json.dumps(source)}
+        highlights = {json.dumps(highlights)}
+
+        if not values:
+            self.wait(3)
+            return
 
         axes = Axes(
             x_range=[0, len(values), 1],
             y_range=[0, max(values) * 1.2 if values else 10, max(values) * 0.2 if values else 2],
             x_length=10,
             y_length=5,
-            axis_config={{"color": "{TEXT_COLOR}"}},
+            axis_config={{"color": "#555555"}},
         )
         axes.next_to(title, DOWN, buff=0.4)
 
+        # X-axis labels
+        x_labels = VGroup()
+        step = max(1, len(labels) // 6)
+        for i in range(0, len(labels), step):
+            lbl = Text(str(labels[i])[:10], font_size=12, color="{MUTED}")
+            lbl.next_to(axes.c2p(i, 0), DOWN, buff=0.15)
+            x_labels.add(lbl)
+
+        self.play(Create(axes), FadeIn(x_labels), run_time=0.6)
+
         points = [axes.c2p(i, v) for i, v in enumerate(values)]
-        line = VMobject(color="{ACCENT_COLORS[0]}")
+        line = VMobject(color="{ACCENT_COLORS[0]}", stroke_width=3)
         line.set_points_smoothly(points)
 
-        dots = VGroup(*[Dot(p, color="{ACCENT_COLORS[1]}") for p in points])
-
-        self.play(Create(axes), run_time=0.8)
+        # Camera zoom into chart, then track the line draw
+        self.play(
+            self.camera.frame.animate.set(width=13).move_to(axes.get_center()),
+            run_time=0.3,
+        )
         self.play(Create(line), run_time=1.5)
-        self.play(FadeIn(dots), run_time=0.5)
+
+        # Dots at data points
+        dots = VGroup(*[Dot(p, radius=0.05, color="{ACCENT_COLORS[1]}") for p in points])
+        self.play(FadeIn(dots), run_time=0.4)
+
+        # Restore camera
+        self.play(Restore(self.camera.frame), run_time=0.4)
+
+        # Indicate highlights
+        for hl in highlights:
+            idx = hl.get("index")
+            hl_label = hl.get("label", "")
+            if idx is not None and idx < len(dots):
+                self.play(Indicate(dots[idx], scale_factor=2.5, color="#ff6b6b"), run_time=0.4)
+                if hl_label:
+                    hl_text = Text(hl_label, font_size=13, color="#ef4444", weight=BOLD)
+                    hl_text.next_to(points[idx], UP, buff=0.2)
+                    self.play(FadeIn(hl_text), run_time=0.2)
+
+        # Indicate max point automatically
+        if values and not highlights:
+            max_idx = values.index(max(values))
+            self.play(Indicate(dots[max_idx], scale_factor=2, color="#ff6b6b"), run_time=0.3)
+
+        if source:
+            src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
+            src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
+            self.play(FadeIn(src), run_time=0.2)
+
         self.wait(3)
-        self.play(FadeOut(axes), FadeOut(line), FadeOut(dots), FadeOut(title), run_time=0.5)
+        self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
 '''
 
 
@@ -690,15 +777,19 @@ def _gen_timeseries(instruction: dict) -> str:
         series_list = [{"name": data.get("series_name", ""), "values": data["values"]}]
     source = data.get("source", "")
     is_pct = data.get("value_type") == "pct_change"
+    events = data.get("events", [])
+    # Highlight points: [{"index": 5, "label": "Export ban"}]
+    highlights = data.get("highlights", [])
 
     colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(series_list))]
 
     return f'''from manim import *
 import numpy as np
 
-class TimeseriesScene(Scene):
+class TimeseriesScene(MovingCameraScene):
     def construct(self):
         self.camera.background_color = "{BG_DARK}"
+        self.camera.frame.save_state()
 
         # Title
         title = Text({json.dumps(title)}, font_size=30, color="{TEXT_COLOR}", weight=BOLD)
@@ -710,6 +801,8 @@ class TimeseriesScene(Scene):
         colors = {json.dumps(colors)}
         is_pct = {json.dumps(is_pct)}
         source = {json.dumps(source)}
+        events = {json.dumps(events)}
+        highlights = {json.dumps(highlights)}
 
         n = len(dates)
         if n < 2 or not series_list:
@@ -732,7 +825,7 @@ class TimeseriesScene(Scene):
         )
         axes.next_to(title, DOWN, buff=0.35)
 
-        # X-axis date labels (show ~6 evenly spaced)
+        # X-axis date labels
         step = max(1, n // 6)
         x_labels = VGroup()
         for i in range(0, n, step):
@@ -741,6 +834,7 @@ class TimeseriesScene(Scene):
                 lbl.next_to(axes.c2p(i, y_min), DOWN, buff=0.15)
                 x_labels.add(lbl)
 
+        chart_group = VGroup(axes, x_labels)
         self.play(Create(axes), FadeIn(x_labels), run_time=0.6)
 
         # Zero line for pct_change
@@ -750,9 +844,19 @@ class TimeseriesScene(Scene):
                 color="#666666", stroke_width=1,
             )
             self.play(Create(zero_line), run_time=0.2)
+            chart_group.add(zero_line)
 
-        # Draw each series
+        # Zoom camera into chart area for the draw phase
+        self.play(
+            self.camera.frame.animate.set(width=13).move_to(axes.get_center()),
+            run_time=0.5,
+        )
+
+        # Draw each series with camera tracking
+        all_lines = VGroup()
+        all_badges = VGroup()
         legend_items = VGroup()
+
         for idx, series in enumerate(series_list):
             vals = [float(v) for v in series.get("values", [])][:n]
             color = colors[idx % len(colors)]
@@ -762,8 +866,29 @@ class TimeseriesScene(Scene):
             line = VMobject(color=color, stroke_width=3)
             line.set_points_smoothly(points)
 
-            # Animated draw
-            self.play(Create(line), run_time=1.2)
+            # Animated draw with camera following the line endpoint
+            # Split into segments for camera tracking effect
+            segments = min(4, max(2, n // 10))
+            seg_size = len(points) // segments
+            for seg_i in range(segments):
+                start_idx = seg_i * seg_size
+                end_idx = min((seg_i + 1) * seg_size + 1, len(points))
+                if start_idx >= end_idx:
+                    break
+                seg_points = points[start_idx:end_idx]
+                seg_line = VMobject(color=color, stroke_width=3)
+                seg_line.set_points_smoothly(seg_points)
+
+                # Camera gently tracks the drawing
+                target_point = seg_points[-1]
+                self.play(
+                    Create(seg_line),
+                    self.camera.frame.animate.move_to(
+                        axes.get_center() * 0.6 + np.array(target_point) * 0.4
+                    ),
+                    run_time=0.4,
+                )
+                all_lines.add(seg_line)
 
             # End-of-line value badge
             end_val = vals[-1]
@@ -774,7 +899,8 @@ class TimeseriesScene(Scene):
 
             badge = Text(badge_text, font_size=16, color=color, weight=BOLD)
             badge.next_to(points[-1], RIGHT, buff=0.15)
-            self.play(FadeIn(badge), run_time=0.3)
+            self.play(FadeIn(badge), run_time=0.2)
+            all_badges.add(badge)
 
             # Legend entry
             if name:
@@ -783,6 +909,43 @@ class TimeseriesScene(Scene):
                 entry = VGroup(dot, lbl).arrange(RIGHT, buff=0.1)
                 legend_items.add(entry)
 
+        # Restore camera to full view
+        self.play(Restore(self.camera.frame), run_time=0.5)
+
+        # Event markers — vertical dashed lines with labels
+        for evt in events:
+            evt_idx = evt.get("index")
+            evt_label = evt.get("label", "")
+            if evt_idx is not None and 0 <= evt_idx < n:
+                marker = DashedLine(
+                    axes.c2p(evt_idx, y_min),
+                    axes.c2p(evt_idx, y_max * 0.95),
+                    color="#ef4444", stroke_width=1.5, dash_length=0.1,
+                )
+                marker_label = Text(evt_label, font_size=11, color="#ef4444", weight=BOLD)
+                marker_label.next_to(axes.c2p(evt_idx, y_max * 0.9), UP, buff=0.1)
+                if marker_label.width > 2.5:
+                    marker_label.scale_to_fit_width(2.5)
+                self.play(Create(marker), FadeIn(marker_label), run_time=0.3)
+
+        # Indicate highlights — pulse specific data points
+        for hl in highlights:
+            hl_idx = hl.get("index")
+            hl_series = hl.get("series", 0)
+            hl_label = hl.get("label", "")
+            if hl_idx is not None and hl_series < len(series_list):
+                vals = series_list[hl_series].get("values", [])
+                if hl_idx < len(vals):
+                    pt = axes.c2p(hl_idx, float(vals[hl_idx]))
+                    dot = Dot(pt, radius=0.1, color="#ef4444")
+                    self.play(FadeIn(dot), run_time=0.15)
+                    self.play(Indicate(dot, scale_factor=2, color="#ff6b6b"), run_time=0.4)
+                    if hl_label:
+                        hl_text = Text(hl_label, font_size=12, color="#ef4444", weight=BOLD)
+                        hl_text.next_to(pt, UP, buff=0.2)
+                        self.play(FadeIn(hl_text), run_time=0.2)
+
+        # Legend
         if legend_items:
             legend_items.arrange(RIGHT, buff=0.5)
             legend_items.next_to(axes, DOWN, buff=0.5)

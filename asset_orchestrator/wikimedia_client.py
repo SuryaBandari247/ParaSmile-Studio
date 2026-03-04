@@ -58,8 +58,8 @@ class WikimediaCommonsClient:
         os.makedirs(self._cache_dir, exist_ok=True)
         self._session = requests.Session()
         self._session.headers["User-Agent"] = (
-            "ParaSmileStudio/1.0 (https://github.com/parasmile-studio; "
-            "parasmile-studio@users.noreply.github.com) python-requests/2.31"
+            "CalmCapitalist/1.0 (https://github.com/SuryaBandari247/ParaSmile-Studio; "
+            "calmcapitalist@users.noreply.github.com) python-requests/2.31"
         )
 
     def search_images(

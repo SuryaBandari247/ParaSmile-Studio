@@ -3,7 +3,7 @@ Research Agent - Multi-source trend discovery and story pitch generation.
 
 This module provides functionality to discover and analyze trending topics
 from multiple data sources (YouTube, Google Trends, Reddit, Yahoo Finance,
-Wikipedia) and generate story pitches using GPT-4o-mini for ParaSmile Studio.
+Wikipedia) and generate story pitches using GPT-4o-mini for Calm Capitalist.
 """
 
 __version__ = "0.2.0"

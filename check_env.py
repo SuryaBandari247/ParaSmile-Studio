@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Environment validation utility for ParaSmile Studio.
+Environment validation utility for Calm Capitalist.
 
 Verifies:
 1. YOUTUBE_API_KEY is present in .env (REQUIRED)

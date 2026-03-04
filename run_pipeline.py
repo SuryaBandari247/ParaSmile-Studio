@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-End-to-end pipeline runner for ParaSmile Studio.
+End-to-end pipeline runner for Calm Capitalist.
 
 Chains: Research Agent → Script Converter → Voice Synthesizer → Asset Orchestrator
 Produces a final composed MP4 video from trending topic research.
@@ -285,7 +285,7 @@ def _concatenate_scenes(scene_paths: list[str]) -> str:
 # ── Main ──────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(
-        description="ParaSmile Studio — End-to-End Pipeline"
+        description="Calm Capitalist — End-to-End Pipeline"
     )
     parser.add_argument(
         "--skip-research", action="store_true",
@@ -297,7 +297,7 @@ def main():
     )
     args = parser.parse_args()
 
-    _banner("ParaSmile Studio")
+    _banner("Calm Capitalist")
     _step("Running pre-flight checks...")
 
     if not preflight():

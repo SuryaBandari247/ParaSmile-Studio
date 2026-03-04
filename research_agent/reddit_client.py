@@ -36,7 +36,7 @@ class RedditClient:
 
     _MIN_REQUEST_INTERVAL: float = 2.0  # seconds between HTTP requests
 
-    def __init__(self, user_agent: str = "ParaSmileStudio/1.0 (research-agent)"):
+    def __init__(self, user_agent: str = "CalmCapitalist/1.0 (research-agent)"):
         """
         Initialize Reddit client with descriptive User-Agent.
 
