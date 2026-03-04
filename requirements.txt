@@ -1,0 +1,43 @@
+# Core dependencies
+google-api-python-client==2.108.0
+python-dotenv==1.0.0
+PyYAML==6.0.1
+manim==0.18.1
+
+# AWS infrastructure monitoring (optional)
+boto3==1.34.0
+
+# Multi-source data integration
+pytrends>=4.9.0
+yfinance>=0.2.0
+beautifulsoup4>=4.12.0
+openai>=1.0.0
+
+# Testing dependencies
+hypothesis==6.92.0
+pytest==7.4.3
+pytest-cov==4.1.0
+responses==0.24.1
+
+# Voice Synthesizer dependencies
+fish-audio-sdk>=1.0.0
+mutagen>=1.47.0
+requests>=2.31.0
+numpy>=1.24.0
+faster-whisper>=1.0.0
+
+# ElevenLabs (optional — only needed if using elevenlabs TTS backend)
+# elevenlabs>=1.0.0
+
+# Studio API dependencies
+fastapi>=0.109.0
+uvicorn[standard]>=0.25.0
+pydantic>=2.5.0
+websockets>=12.0
+python-multipart>=0.0.6
+
+# Pipeline UI dependencies (legacy Streamlit)
+streamlit>=1.30.0
+pypdf>=3.17.0
+openpyxl>=3.1.2
+python-docx>=1.1.0

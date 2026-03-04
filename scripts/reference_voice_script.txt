@@ -1,0 +1,68 @@
+REFERENCE VOICE SCRIPT — Read this aloud in one take (~60-90 seconds)
+=====================================================================
+
+Pick ONE 5-10 second segment from the recording as your Fish Audio reference clip.
+The best segment is one with natural cadence, clear articulation, and a calm
+confident tone — typically from the middle of the recording once you've warmed up.
+
+--- BEGIN SCRIPT ---
+
+So here's the thing about modern software architecture. It's not just about
+writing code — it's about designing systems that scale, that fail gracefully,
+and that your team can actually maintain six months from now.
+
+Let's break this down. First: microservices. Are they always the answer? No.
+Absolutely not. But when you're dealing with teams of fifty-plus engineers?
+They start to make a lot of sense.
+
+Now, consider this example. You have a monolith processing ten thousand
+requests per second. That's... actually impressive. But what happens when
+your authentication module needs an update? You redeploy everything. The
+database, the API layer, the caching — all of it.
+
+Here's where it gets interesting. With event-driven architecture, you can
+decouple these components entirely. Think Kafka, think RabbitMQ, think
+pub-sub patterns. The result? Each service evolves independently.
+
+But wait — and this is crucial — don't over-engineer it. I've seen teams
+spend months building distributed systems when a simple PostgreSQL database
+would have been perfectly fine. Seriously. Sometimes the boring solution
+is the right solution.
+
+The numbers tell the story: seventy-three percent of startups that adopted
+microservices too early ended up reverting. That's nearly three out of four.
+Let that sink in for a moment.
+
+So what's the takeaway? Start simple. Measure everything. And only add
+complexity when the data — not your ego — tells you it's time.
+
+--- END SCRIPT ---
+
+PUNCTUATION COVERAGE:
+  - Periods (declarative statements)
+  - Question marks (rhetorical and direct questions)
+  - Exclamation marks (emphasis without yelling)
+  - Em dashes (mid-sentence pivots)
+  - Ellipsis (trailing thought / dramatic pause)
+  - Colons (introducing lists/examples)
+  - Commas (natural breathing points)
+  - Parenthetical asides (lower register)
+
+EMOTIONAL RANGE COVERED:
+  - Confident/authoritative: "It's not just about writing code"
+  - Curious/questioning: "Are they always the answer?"
+  - Emphatic denial: "No. Absolutely not."
+  - Building excitement: "Here's where it gets interesting"
+  - Cautionary/warning: "But wait — and this is crucial"
+  - Conversational/casual: "Seriously. Sometimes the boring solution..."
+  - Data-driven/analytical: "seventy-three percent of startups"
+  - Reflective/thoughtful: "Let that sink in for a moment"
+  - Conclusive/summarizing: "So what's the takeaway?"
+
+DELIVERY NOTES:
+  - Maintain a calm, knowledgeable tone throughout (no yelling/clickbait)
+  - Slight emphasis on technical terms (microservices, Kafka, pub-sub)
+  - Natural pauses after questions — don't rush into the answer
+  - Numbers should be spoken clearly and slightly slower
+  - Em dash sections = brief pause, then slight shift in energy
+  - The overall vibe: smart friend explaining tech over coffee
