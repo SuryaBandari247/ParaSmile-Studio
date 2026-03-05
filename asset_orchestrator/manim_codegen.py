@@ -11,17 +11,86 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-BACKGROUND_COLOR = "#333333"
-TEXT_COLOR = "#FFFFFF"
+BACKGROUND_COLOR = "#FFFFFF"
+TEXT_COLOR = "#111827"
+
+# ── Documentary palette (Calm Capitalist house style) ──
+# Deep blue primary, gray hierarchy, emerald/red accents.
+# Defined in effects_catalog/palette.py — duplicated here for codegen.
 ACCENT_COLORS = [
-    "#4FC3F7", "#81C784", "#FFB74D", "#E57373",
-    "#BA68C8", "#4DD0E1", "#AED581", "#FF8A65",
+    "#2563EB",  # deep blue (primary)
+    "#10B981",  # emerald
+    "#F59E0B",  # amber
+    "#EF4444",  # red
+    "#8B5CF6",  # violet
+    "#06B6D4",  # cyan
+    "#F97316",  # orange
+    "#EC4899",  # pink
 ]
 
 
-def generate_scene_code(instruction: dict) -> str:
-    """Generate a complete Manim Python file for the given instruction."""
+def generate_scene_code(
+    instruction: dict,
+    registry: "EffectRegistry | None" = None,
+    audio_timestamps: list[float] | None = None,
+    quality_profile: str = "production",
+) -> str:
+    """Generate a complete Manim Python file for the given instruction.
+
+    When *registry* is provided, uses catalog-driven dispatch:
+      resolve → validate params → merge styles → render via legacy generator.
+    Falls back to the hardcoded generators dict when registry is None.
+
+    Args:
+        instruction: Scene instruction dict with type, data, style_overrides.
+        registry: EffectRegistry for skeleton lookup. None = legacy mode.
+        audio_timestamps: Timestamps (seconds) from SynthesizerService,
+            one per sync_point in the skeleton. Injects self.wait() calls.
+        quality_profile: Render quality profile name ("draft" or "production").
+    """
     vis_type = instruction.get("type", "text_overlay")
+
+    # ── Registry-driven path ────────────────────────────────
+    if registry is not None:
+        from effects_catalog.exceptions import SyncPointMismatchError, UnknownProfileError
+        from effects_catalog.schema_validator import SchemaValidator
+
+        skeleton = registry.resolve(vis_type, instruction)
+
+        # Validate params against skeleton schema
+        raw_params = instruction.get("data", {})
+        if skeleton.parameter_schema:
+            validated = SchemaValidator.validate(raw_params, skeleton.parameter_schema)
+            instruction = {**instruction, "data": validated}
+
+        # Validate quality profile
+        if quality_profile not in skeleton.quality_profiles:
+            raise UnknownProfileError(quality_profile, list(skeleton.quality_profiles.keys()))
+
+        # Sync point alignment
+        if skeleton.sync_points and audio_timestamps is not None:
+            if len(audio_timestamps) != len(skeleton.sync_points):
+                raise SyncPointMismatchError(len(skeleton.sync_points), len(audio_timestamps))
+            # Store sync waits on instruction for template use
+            instruction = {
+                **instruction,
+                "_sync_waits": dict(zip(skeleton.sync_points, audio_timestamps)),
+            }
+
+        # Apply initial_wait from skeleton (overridable via style_overrides)
+        style_overrides = instruction.get("style_overrides", {})
+        effective_wait = style_overrides.get("initial_wait", skeleton.initial_wait)
+        if effective_wait:
+            instruction = {**instruction, "_initial_wait": effective_wait}
+
+        logger.info(
+            "Registry dispatch: %s → %s (quality=%s)",
+            vis_type, skeleton.identifier, quality_profile,
+        )
+        # Fall through to legacy generators using the resolved identifier
+        vis_type = skeleton.identifier
+
+    # ── Legacy hardcoded dispatch ───────────────────────────
     generators = {
         "text_overlay": _gen_text_overlay,
         "bar_chart": _gen_bar_chart,
@@ -40,9 +109,66 @@ def generate_scene_code(instruction: dict) -> str:
         "horizontal_bar": _gen_horizontal_bar,
         "grouped_bar": _gen_grouped_bar,
         "donut": _gen_donut_chart,
+        "pdf_forensic": _gen_pdf_forensic,
+        "forensic_zoom": _gen_forensic_zoom,
+        "volatility_shadow": _gen_volatility_shadow,
+        "relative_velocity": _gen_relative_velocity,
+        "contextual_heatmap": _gen_contextual_heatmap,
+        "bull_bear_projection": _gen_bull_bear_projection,
+        "moat_radar": _gen_moat_radar,
+        "atomic_reveal": _gen_atomic_reveal,
+        "liquidity_shock": _gen_liquidity_shock,
+        "momentum_glow": _gen_momentum_glow,
+        "regime_shift": _gen_regime_shift,
+        "speed_ramp": _gen_speed_ramp,
+        "capital_flow": _gen_capital_flow,
+        "compounding_explosion": _gen_compounding_explosion,
+        "market_share_territory": _gen_market_share_territory,
+        "historical_rank": _gen_historical_rank,
     }
     gen = generators.get(vis_type, _gen_text_overlay)
-    return gen(instruction)
+    code = gen(instruction)
+
+    # ── Post-process: inject initial_wait and sync_waits into generated code ──
+    if registry is not None:
+        code = _inject_pacing(code, instruction)
+
+    return code
+
+
+def _inject_pacing(code: str, instruction: dict) -> str:
+    """Post-process generated Manim code to inject pacing directives.
+
+    Inserts initial_wait after the first self.play() call and appends
+    sync_wait comments for narration alignment.
+    """
+    initial_wait = instruction.get("_initial_wait", 0.0)
+    sync_waits = instruction.get("_sync_waits")
+
+    if not initial_wait and not sync_waits:
+        return code
+
+    lines = code.split("\n")
+    result = []
+    first_play_injected = False
+
+    for line in lines:
+        result.append(line)
+        # Inject initial_wait after the first self.play() call completes
+        if not first_play_injected and initial_wait and "self.play(" in line and line.rstrip().endswith(")"):
+            indent = len(line) - len(line.lstrip())
+            pad = " " * indent
+            result.append(f"{pad}self.wait({initial_wait})  # initial_wait: viewer orients")
+            first_play_injected = True
+
+    # Append sync_wait metadata as a comment block at the end for template use
+    if sync_waits:
+        result.append("")
+        result.append("# ── Sync Points (narration alignment) ──")
+        for point_name, timestamp in sync_waits.items():
+            result.append(f"# sync_point: {point_name} @ {timestamp:.2f}s")
+
+    return "\n".join(result)
 
 
 def get_scene_class_name(instruction: dict) -> str:
@@ -90,6 +216,7 @@ class TextOverlayScene(Scene):
 '''
 
 
+
 def _gen_bar_chart(instruction: dict) -> str:
     data = instruction.get("data", {})
     labels = data.get("labels", [])
@@ -117,39 +244,83 @@ class BarChartScene(Scene):
             self.wait(3)
             return
 
-        chart = BarChart(
-            values=values,
-            bar_names=labels,
-            bar_colors=colors,
-            y_range=[0, max(values) * 1.2 if values else 10, max(values) * 0.2 if values else 2],
-            x_length=10,
+        max_val = max(values) if values else 10
+        n = len(values)
+        bar_width = min(0.8, 9.0 / max(n, 1))
+        bar_gap = bar_width * 0.3
+
+        # Build axes area
+        axes = Axes(
+            x_range=[0, n, 1],
+            y_range=[0, max_val * 1.25, max_val * 0.25 or 1],
+            x_length=10.5,
             y_length=5,
+            axis_config={{"color": "#c0c0c0", "include_ticks": False, "stroke_width": 1.5}},
         )
-        chart.next_to(title, DOWN, buff=0.4)
+        axes.next_to(title, DOWN, buff=0.4)
 
-        # Progressive bar reveal — bars grow one by one
-        self.play(Create(chart.get_axes()), run_time=0.5)
-        for bar in chart.bars:
-            self.play(GrowFromEdge(bar, DOWN), run_time=0.2)
+        # Subtle grid
+        grid = VGroup()
+        y_step = max_val * 0.25 if max_val > 0 else 2
+        for i in range(1, 5):
+            y_val = i * y_step
+            if y_val <= max_val * 1.25:
+                line = DashedLine(
+                    axes.c2p(0, y_val), axes.c2p(n, y_val),
+                    color="#e0e0e0", stroke_width=0.8, dash_length=0.15,
+                )
+                grid.add(line)
 
-        # Value labels on top of bars
+        self.play(Create(axes), FadeIn(grid), run_time=0.5)
+
+        # Progressive bar reveal with value labels
+        bars = VGroup()
         value_labels = VGroup()
-        for i, (bar, val) in enumerate(zip(chart.bars, values)):
-            lbl = Text(f"{{val:,.0f}}", font_size=14, color=colors[i % len(colors)], weight=BOLD)
-            lbl.next_to(bar, UP, buff=0.1)
-            value_labels.add(lbl)
+        x_labels = VGroup()
+
+        for i, (lbl, val, col) in enumerate(zip(labels, values, colors)):
+            # X label
+            x_lbl = Text(str(lbl), font_size=14, color="{MUTED}")
+            x_lbl.next_to(axes.c2p(i + 0.5, 0), DOWN, buff=0.15)
+            x_labels.add(x_lbl)
+
+            # Bar — built manually for control
+            bottom = axes.c2p(i + 0.5 - bar_width / 2, 0)
+            top = axes.c2p(i + 0.5 - bar_width / 2, val)
+            bar_h = abs(top[1] - bottom[1])
+
+            bar = RoundedRectangle(
+                corner_radius=0.05,
+                width=bar_width, height=bar_h,
+                color=col, fill_opacity=0.9, stroke_width=0,
+            )
+            bar.move_to(axes.c2p(i + 0.5, val / 2))
+            bars.add(bar)
+
+            # Value label
+            val_lbl = Text(f"{{val:,.1f}}" if val < 1000 else f"{{val:,.0f}}", font_size=14, color=col, weight=BOLD)
+            val_lbl.next_to(bar, UP, buff=0.1)
+            value_labels.add(val_lbl)
+
+        self.play(FadeIn(x_labels), run_time=0.3)
+
+        # Staggered bar growth
+        self.play(
+            LaggedStart(*[GrowFromEdge(bar, DOWN) for bar in bars], lag_ratio=0.15),
+            run_time=max(1.0, n * 0.2),
+        )
         self.play(FadeIn(value_labels), run_time=0.3)
 
         # Indicate the highest bar
         if values:
             max_idx = values.index(max(values))
-            self.play(Indicate(chart.bars[max_idx], scale_factor=1.1, color="#ff6b6b"), run_time=0.4)
+            self.play(Indicate(bars[max_idx], scale_factor=1.08, color="#FF1744"), run_time=0.5)
 
         # Indicate specific highlights
         for hl in highlights:
             idx = hl.get("index")
-            if idx is not None and idx < len(chart.bars):
-                self.play(Indicate(chart.bars[idx], scale_factor=1.1, color="#ff6b6b"), run_time=0.3)
+            if idx is not None and idx < len(bars):
+                self.play(Indicate(bars[idx], scale_factor=1.08, color="#FF1744"), run_time=0.4)
 
         if source:
             src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
@@ -159,6 +330,7 @@ class BarChartScene(Scene):
         self.wait(3)
         self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
 '''
+
 
 
 def _gen_line_chart(instruction: dict) -> str:
@@ -194,7 +366,7 @@ class LineChartScene(MovingCameraScene):
             y_range=[0, max(values) * 1.2 if values else 10, max(values) * 0.2 if values else 2],
             x_length=10,
             y_length=5,
-            axis_config={{"color": "#555555"}},
+            axis_config={{"color": "#c0c0c0"}},
         )
         axes.next_to(title, DOWN, buff=0.4)
 
@@ -333,12 +505,12 @@ class CodeSnippetScene(Scene):
 
 # ── YouTube-style scene generators ────────────────────────────────────────
 
-BG_DARK = "#1a1a2e"
-ACCENT_RED = "#e94560"
-ACCENT_BLUE = "#0f3460"
+BG_DARK = "#FFFFFF"
+ACCENT_RED = "#FF453A"
+ACCENT_BLUE = "#5AC8FA"
 REDDIT_ORANGE = "#FF4500"
-REDDIT_BG = "#1A1A1B"
-REDDIT_CARD = "#272729"
+REDDIT_BG = "#F5F5F5"
+REDDIT_CARD = "#FFFFFF"
 MUTED = "#888888"
 
 
@@ -373,7 +545,7 @@ class RedditPostScene(Scene):
         self.play(FadeIn(sub_dot), FadeIn(sub_text), FadeIn(user_text), run_time=0.4)
 
         # Post title
-        title = Text({json.dumps(post_title)}, font_size=28, color="#D7DADC", line_spacing=1.3)
+        title = Text({json.dumps(post_title)}, font_size=28, color="#2d2d3f", line_spacing=1.3)
         title.move_to(ORIGIN)
         if title.width > 10:
             title.scale_to_fit_width(10)
@@ -382,7 +554,7 @@ class RedditPostScene(Scene):
         # Vote bar on left
         up_arrow = Triangle(color="{REDDIT_ORANGE}", fill_opacity=1).scale(0.15)
         up_arrow.move_to(LEFT * 5.2 + DOWN * 0.5)
-        vote_count = Text({json.dumps(str(upvotes))}, font_size=20, color="#D7DADC", weight=BOLD)
+        vote_count = Text({json.dumps(str(upvotes))}, font_size=20, color="#2d2d3f", weight=BOLD)
         vote_count.next_to(up_arrow, DOWN, buff=0.15)
         down_arrow = Triangle(color="{MUTED}", fill_opacity=0.5).scale(0.15).rotate(PI)
         down_arrow.next_to(vote_count, DOWN, buff=0.15)
@@ -417,7 +589,7 @@ class StatCalloutScene(Scene):
         stat.move_to(UP * 0.5)
 
         # Label
-        label = Text({json.dumps(label)}, font_size=36, color="#FFFFFF", weight=BOLD)
+        label = Text({json.dumps(label)}, font_size=36, color="#1a1a2e", weight=BOLD)
         label.next_to(stat, DOWN, buff=0.4)
 
         # Subtitle
@@ -427,7 +599,7 @@ class StatCalloutScene(Scene):
         # Dramatic entrance
         self.play(GrowFromCenter(stat), run_time=0.6)
         self.play(FadeIn(label, shift=UP * 0.2), run_time=0.4)
-        if {json.dumps(subtitle.strip() != "")}:
+        if {repr(subtitle.strip() != "")}:
             self.play(FadeIn(subtitle, shift=UP * 0.1), run_time=0.3)
 
         # Pulse effect on the number
@@ -460,7 +632,7 @@ class QuoteBlockScene(Scene):
         bar.move_to(LEFT * 4.5)
 
         # Quote text
-        quote = Text({json.dumps(quote)}, font_size=28, color="#FFFFFF", line_spacing=1.4)
+        quote = Text({json.dumps(quote)}, font_size=28, color="#1a1a2e", line_spacing=1.4)
         quote.move_to(RIGHT * 0.3 + UP * 0.3)
         if quote.width > 9:
             quote.scale_to_fit_width(9)
@@ -472,7 +644,7 @@ class QuoteBlockScene(Scene):
 
         self.play(FadeIn(bar), run_time=0.3)
         self.play(FadeIn(quote, shift=RIGHT * 0.3), run_time=0.6)
-        if {json.dumps(bool(attribution))}:
+        if {repr(bool(attribution))}:
             self.play(FadeIn(attr, shift=UP * 0.1), run_time=0.3)
 
         self.wait(3.5)
@@ -502,7 +674,7 @@ class SectionTitleScene(Scene):
             self.play(FadeIn(num, scale=0.5), run_time=0.4)
 
         # Heading
-        heading = Text({json.dumps(heading)}, font_size=52, color="#FFFFFF", weight=BOLD)
+        heading = Text({json.dumps(heading)}, font_size=52, color="#1a1a2e", weight=BOLD)
         if number_str:
             heading.next_to(elements[-1], DOWN, buff=0.4)
         else:
@@ -547,7 +719,7 @@ class BulletRevealScene(Scene):
         self.camera.background_color = "{BG_DARK}"
 
         # Heading
-        heading = Text({json.dumps(heading)}, font_size=36, color="#FFFFFF", weight=BOLD)
+        heading = Text({json.dumps(heading)}, font_size=36, color="#1a1a2e", weight=BOLD)
         heading.to_edge(UP, buff=0.6)
         if heading.width > 12:
             heading.scale_to_fit_width(12)
@@ -567,7 +739,7 @@ class BulletRevealScene(Scene):
 
         for i, bullet_text in enumerate(bullets):
             dot = Dot(radius=0.06, color="{ACCENT_RED}")
-            text = Text(bullet_text, font_size=24, color="#D7DADC", line_spacing=1.2)
+            text = Text(bullet_text, font_size=24, color="#2d2d3f", line_spacing=1.2)
             if text.width > 10:
                 text.scale_to_fit_width(10)
             text.next_to(prev, DOWN, buff=0.35, aligned_edge=LEFT)
@@ -596,7 +768,7 @@ class ComparisonScene(Scene):
         self.camera.background_color = "{BG_DARK}"
 
         # Title
-        title = Text({json.dumps(title)}, font_size=32, color="#FFFFFF", weight=BOLD)
+        title = Text({json.dumps(title)}, font_size=32, color="#1a1a2e", weight=BOLD)
         title.to_edge(UP, buff=0.4)
         self.play(FadeIn(title), run_time=0.3)
 
@@ -612,7 +784,7 @@ class ComparisonScene(Scene):
         left_items = {json.dumps(left_items)}
         prev = left_head
         for item in left_items:
-            t = Text("• " + item, font_size=20, color="#D7DADC")
+            t = Text("• " + item, font_size=20, color="#2d2d3f")
             t.next_to(prev, DOWN, buff=0.25, aligned_edge=LEFT)
             if t.width > 5.5:
                 t.scale_to_fit_width(5.5)
@@ -627,7 +799,7 @@ class ComparisonScene(Scene):
         right_items = {json.dumps(right_items)}
         prev = right_head
         for item in right_items:
-            t = Text("• " + item, font_size=20, color="#D7DADC")
+            t = Text("• " + item, font_size=20, color="#2d2d3f")
             t.next_to(prev, DOWN, buff=0.25, aligned_edge=LEFT)
             if t.width > 5.5:
                 t.scale_to_fit_width(5.5)
@@ -654,12 +826,12 @@ class FullscreenStatementScene(Scene):
 
         if emphasis and emphasis in statement:
             parts = statement.split(emphasis, 1)
-            before = Text(parts[0], font_size=42, color="#FFFFFF")
+            before = Text(parts[0], font_size=42, color="#1a1a2e")
             emph = Text(emphasis, font_size=42, color="{ACCENT_RED}", weight=BOLD)
-            after = Text(parts[1] if len(parts) > 1 else "", font_size=42, color="#FFFFFF")
+            after = Text(parts[1] if len(parts) > 1 else "", font_size=42, color="#1a1a2e")
             group = VGroup(before, emph, after).arrange(RIGHT, buff=0.1)
         else:
-            group = Text(statement, font_size=42, color="#FFFFFF", line_spacing=1.3)
+            group = Text(statement, font_size=42, color="#1a1a2e", line_spacing=1.3)
 
         if group.width > 12:
             group.scale_to_fit_width(12)
@@ -673,12 +845,18 @@ class FullscreenStatementScene(Scene):
 # ── Yahoo Finance enrichment ──────────────────────────────────────────────
 
 
+
+
 def _enrich_from_yahoo(data: dict) -> dict:
     """Fetch live price history from Yahoo Finance if data has ticker fields.
 
     Only runs when data doesn't already have `values`/`series` populated.
-    Returns enriched copy of data dict.
+    Returns enriched copy of data dict with events converted to index positions.
+    If events reference dates outside the requested period, the period is
+    automatically extended to cover them.
     """
+    from datetime import datetime, timedelta
+
     tickers = data.get("tickers") or []
     single = data.get("ticker", "")
     if single and single not in tickers:
@@ -692,6 +870,42 @@ def _enrich_from_yahoo(data: dict) -> dict:
     period = data.get("period", "1y")
     interval = data.get("interval", "1wk")
     value_type = data.get("value_type", "close")
+
+    # Check if any events require extending the period
+    events = data.get("events", [])
+    if events:
+        earliest_event = None
+        for evt in events:
+            evt_date = evt.get("date", "")
+            if evt_date:
+                try:
+                    ed = datetime.strptime(evt_date[:10], "%Y-%m-%d")
+                    if earliest_event is None or ed < earliest_event:
+                        earliest_event = ed
+                except Exception:
+                    pass
+
+        if earliest_event:
+            # Calculate how far back the requested period goes
+            period_map = {
+                "1mo": 30, "3mo": 90, "6mo": 180, "1y": 365,
+                "2y": 730, "5y": 1825, "10y": 3650, "max": 36500,
+            }
+            period_days = period_map.get(period, 365)
+            cutoff = datetime.now() - timedelta(days=period_days)
+
+            if earliest_event < cutoff:
+                # Extend period to cover the event + 30 day buffer
+                needed_days = (datetime.now() - earliest_event).days + 30
+                # Pick the smallest standard period that covers it
+                for p, d in sorted(period_map.items(), key=lambda x: x[1]):
+                    if d >= needed_days:
+                        period = p
+                        break
+                else:
+                    period = "max"
+                logger.info("Extended period from %s to %s to cover event at %s",
+                            data.get("period", "1y"), period, earliest_event.strftime("%Y-%m-%d"))
 
     try:
         import yfinance as yf
@@ -726,9 +940,39 @@ def _enrich_from_yahoo(data: dict) -> dict:
                 data["chart_type"] = "timeseries"
             if not data.get("source"):
                 data["source"] = "Yahoo Finance"
+
+            # Convert event dates to index positions
+            if events and all_dates:
+                resolved_events = []
+                for evt in events:
+                    evt_date = evt.get("date", "")
+                    evt_label = evt.get("label", "")
+                    if evt_date:
+                        best_idx = 0
+                        best_dist = float("inf")
+                        try:
+                            target = datetime.strptime(evt_date[:10], "%Y-%m-%d")
+                            for i, d in enumerate(all_dates):
+                                d1 = datetime.strptime(d[:10], "%Y-%m-%d")
+                                dist = abs((d1 - target).days)
+                                if dist < best_dist:
+                                    best_dist = dist
+                                    best_idx = i
+                        except Exception:
+                            best_idx = len(all_dates) // 2
+
+                        resolved_events.append({"index": best_idx, "label": evt_label})
+                        logger.info("Event '%s' at date %s → index %d (closest: %s, %d days off)",
+                                    evt_label, evt_date, best_idx,
+                                    all_dates[best_idx] if best_idx < len(all_dates) else "?",
+                                    best_dist)
+                    elif "index" in evt:
+                        resolved_events.append(evt)
+                data["events"] = resolved_events
+
             logger.info(
-                "Enriched chart with Yahoo Finance: %d tickers, %d points",
-                len(series_list), len(all_dates),
+                "Enriched chart with Yahoo Finance: %d tickers, %d points, %d events",
+                len(series_list), len(all_dates), len(data.get("events", [])),
             )
     except ImportError:
         logger.warning("yfinance not installed — skipping enrichment")
@@ -736,6 +980,8 @@ def _enrich_from_yahoo(data: dict) -> dict:
         logger.warning("Yahoo Finance enrichment failed: %s", exc)
 
     return data
+
+
 
 
 # ── Data chart dispatcher (replaces data_chart_renderer.py) ───────────────
@@ -768,6 +1014,7 @@ def _gen_data_chart(instruction: dict) -> str:
 # ── Timeseries (multi-line, animated draw) ────────────────────────────────
 
 
+
 def _gen_timeseries(instruction: dict) -> str:
     data = instruction.get("data", {})
     title = instruction.get("title", "")
@@ -778,10 +1025,13 @@ def _gen_timeseries(instruction: dict) -> str:
     source = data.get("source", "")
     is_pct = data.get("value_type") == "pct_change"
     events = data.get("events", [])
-    # Highlight points: [{"index": 5, "label": "Export ban"}]
     highlights = data.get("highlights", [])
 
     colors = [ACCENT_COLORS[i % len(ACCENT_COLORS)] for i in range(len(series_list))]
+
+    # Vibrant palette constants for generated code
+    GREEN_UP = "#00E676"
+    RED_DOWN = "#FF5252"
 
     return f'''from manim import *
 import numpy as np
@@ -799,10 +1049,13 @@ class TimeseriesScene(MovingCameraScene):
         series_list = {json.dumps(series_list)}
         dates = {json.dumps(dates)}
         colors = {json.dumps(colors)}
-        is_pct = {json.dumps(is_pct)}
+        is_pct = {repr(is_pct)}
         source = {json.dumps(source)}
         events = {json.dumps(events)}
         highlights = {json.dumps(highlights)}
+
+        GREEN_UP = "{GREEN_UP}"
+        RED_DOWN = "{RED_DOWN}"
 
         n = len(dates)
         if n < 2 or not series_list:
@@ -821,9 +1074,20 @@ class TimeseriesScene(MovingCameraScene):
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=10.5,
             y_length=5,
-            axis_config={{"color": "#555555", "include_ticks": True}},
+            axis_config={{"color": "#c0c0c0", "include_ticks": True, "stroke_width": 1.5}},
         )
         axes.next_to(title, DOWN, buff=0.35)
+
+        # Subtle horizontal grid lines
+        grid = VGroup()
+        y_step = (y_max - y_min) / 5
+        for i in range(1, 5):
+            y_val = y_min + i * y_step
+            line = DashedLine(
+                axes.c2p(0, y_val), axes.c2p(n - 1, y_val),
+                color="#e0e0e0", stroke_width=0.8, dash_length=0.15,
+            )
+            grid.add(line)
 
         # X-axis date labels
         step = max(1, n // 6)
@@ -834,101 +1098,134 @@ class TimeseriesScene(MovingCameraScene):
                 lbl.next_to(axes.c2p(i, y_min), DOWN, buff=0.15)
                 x_labels.add(lbl)
 
-        chart_group = VGroup(axes, x_labels)
-        self.play(Create(axes), FadeIn(x_labels), run_time=0.6)
+        self.play(Create(axes), FadeIn(x_labels), FadeIn(grid), run_time=0.6)
 
         # Zero line for pct_change
         if is_pct and y_min < 0:
             zero_line = DashedLine(
                 axes.c2p(0, 0), axes.c2p(n - 1, 0),
-                color="#666666", stroke_width=1,
+                color="#8b949e", stroke_width=1.2,
             )
             self.play(Create(zero_line), run_time=0.2)
-            chart_group.add(zero_line)
 
-        # Zoom camera into chart area for the draw phase
+        # Gentle camera push into chart area
         self.play(
             self.camera.frame.animate.set(width=13).move_to(axes.get_center()),
             run_time=0.5,
         )
 
-        # Draw each series with camera tracking
-        all_lines = VGroup()
+        # ── Draw each series ──
         all_badges = VGroup()
         legend_items = VGroup()
 
         for idx, series in enumerate(series_list):
             vals = [float(v) for v in series.get("values", [])][:n]
-            color = colors[idx % len(colors)]
+            base_color = colors[idx % len(colors)]
             name = series.get("name", "")
 
             points = [axes.c2p(i, v) for i, v in enumerate(vals)]
-            line = VMobject(color=color, stroke_width=3)
-            line.set_points_smoothly(points)
 
-            # Animated draw with camera following the line endpoint
-            # Split into segments for camera tracking effect
-            segments = min(4, max(2, n // 10))
-            seg_size = len(points) // segments
-            for seg_i in range(segments):
-                start_idx = seg_i * seg_size
-                end_idx = min((seg_i + 1) * seg_size + 1, len(points))
-                if start_idx >= end_idx:
-                    break
-                seg_points = points[start_idx:end_idx]
-                seg_line = VMobject(color=color, stroke_width=3)
-                seg_line.set_points_smoothly(seg_points)
+            # Build colored segments: green for up, red for down
+            segments = VGroup()
+            for i in range(len(vals) - 1):
+                p1 = points[i]
+                p2 = points[i + 1]
+                going_down = vals[i + 1] < vals[i]
+                seg_color = RED_DOWN if going_down else (base_color if len(series_list) > 1 else GREEN_UP)
+                seg = Line(p1, p2, color=seg_color, stroke_width=2.5)
+                segments.add(seg)
 
-                # Camera gently tracks the drawing
-                target_point = seg_points[-1]
-                self.play(
-                    Create(seg_line),
-                    self.camera.frame.animate.move_to(
-                        axes.get_center() * 0.6 + np.array(target_point) * 0.4
-                    ),
-                    run_time=0.4,
-                )
-                all_lines.add(seg_line)
+            # Fast smooth draw — single animation, camera gently drifts right
+            draw_time = min(2.0, max(0.8, n * 0.008))
+            self.play(
+                LaggedStart(*[Create(seg) for seg in segments], lag_ratio=0.005),
+                self.camera.frame.animate.move_to(
+                    axes.get_center() * 0.7 + np.array(points[-1]) * 0.3
+                ),
+                run_time=draw_time,
+                rate_func=smooth,
+            )
+
+            # Glow effect — faint wider line behind for depth
+            glow = VMobject(color=base_color, stroke_width=7, stroke_opacity=0.12)
+            glow.set_points_smoothly(points)
+            self.add(glow)
+            self.mobjects.insert(0, self.mobjects.pop())
 
             # End-of-line value badge
             end_val = vals[-1]
             if is_pct:
                 badge_text = f"+{{end_val:.1f}}%" if end_val >= 0 else f"{{end_val:.1f}}%"
+                badge_color = GREEN_UP if end_val >= 0 else RED_DOWN
             else:
                 badge_text = f"${{end_val:,.0f}}" if end_val > 100 else f"{{end_val:,.2f}}"
+                badge_color = base_color
 
-            badge = Text(badge_text, font_size=16, color=color, weight=BOLD)
+            badge_bg = RoundedRectangle(
+                corner_radius=0.08, width=1.4, height=0.35,
+                color=badge_color, fill_opacity=0.15, stroke_width=1, stroke_color=badge_color,
+            )
+            badge_label = Text(badge_text, font_size=16, color=badge_color, weight=BOLD)
+            badge = VGroup(badge_bg, badge_label)
+            badge_label.move_to(badge_bg.get_center())
             badge.next_to(points[-1], RIGHT, buff=0.15)
-            self.play(FadeIn(badge), run_time=0.2)
+            self.play(FadeIn(badge, scale=0.8), run_time=0.2)
             all_badges.add(badge)
 
             # Legend entry
             if name:
-                dot = Dot(radius=0.06, color=color)
+                dot = Dot(radius=0.06, color=base_color)
                 lbl = Text(name, font_size=14, color="{TEXT_COLOR}")
                 entry = VGroup(dot, lbl).arrange(RIGHT, buff=0.1)
                 legend_items.add(entry)
 
-        # Restore camera to full view
-        self.play(Restore(self.camera.frame), run_time=0.5)
+        # Restore camera to full view before events
+        self.play(Restore(self.camera.frame), run_time=0.4)
 
-        # Event markers — vertical dashed lines with labels
+        # ── Event markers — zoom into the event date ──
         for evt in events:
             evt_idx = evt.get("index")
             evt_label = evt.get("label", "")
             if evt_idx is not None and 0 <= evt_idx < n:
+                # Vertical marker line
                 marker = DashedLine(
                     axes.c2p(evt_idx, y_min),
                     axes.c2p(evt_idx, y_max * 0.95),
-                    color="#ef4444", stroke_width=1.5, dash_length=0.1,
+                    color=RED_DOWN, stroke_width=2, dash_length=0.1,
                 )
-                marker_label = Text(evt_label, font_size=11, color="#ef4444", weight=BOLD)
-                marker_label.next_to(axes.c2p(evt_idx, y_max * 0.9), UP, buff=0.1)
+                marker_label = Text(evt_label, font_size=13, color=RED_DOWN, weight=BOLD)
+                marker_label.next_to(axes.c2p(evt_idx, y_max * 0.88), UP, buff=0.1)
                 if marker_label.width > 2.5:
                     marker_label.scale_to_fit_width(2.5)
-                self.play(Create(marker), FadeIn(marker_label), run_time=0.3)
 
-        # Indicate highlights — pulse specific data points
+                # Camera zooms into the event region
+                evt_point = axes.c2p(evt_idx, y_min + (y_max - y_min) * 0.5)
+                self.play(
+                    Create(marker),
+                    FadeIn(marker_label),
+                    self.camera.frame.animate.set(width=7).move_to(evt_point),
+                    run_time=0.5,
+                )
+
+                # Pulse the event data point
+                if series_list:
+                    evt_vals = series_list[0].get("values", [])
+                    if evt_idx < len(evt_vals):
+                        evt_dot = Dot(
+                            axes.c2p(evt_idx, float(evt_vals[evt_idx])),
+                            radius=0.1, color=RED_DOWN,
+                        )
+                        self.play(FadeIn(evt_dot), run_time=0.1)
+                        self.play(
+                            Indicate(evt_dot, scale_factor=2, color="#FF453A"),
+                            run_time=0.4,
+                        )
+
+                # Brief hold then pull back
+                self.wait(0.5)
+                self.play(Restore(self.camera.frame), run_time=0.4)
+
+        # ── Indicate highlights ──
         for hl in highlights:
             hl_idx = hl.get("index")
             hl_series = hl.get("series", 0)
@@ -937,11 +1234,11 @@ class TimeseriesScene(MovingCameraScene):
                 vals = series_list[hl_series].get("values", [])
                 if hl_idx < len(vals):
                     pt = axes.c2p(hl_idx, float(vals[hl_idx]))
-                    dot = Dot(pt, radius=0.1, color="#ef4444")
+                    dot = Dot(pt, radius=0.1, color=RED_DOWN)
                     self.play(FadeIn(dot), run_time=0.15)
-                    self.play(Indicate(dot, scale_factor=2, color="#ff6b6b"), run_time=0.4)
+                    self.play(Indicate(dot, scale_factor=2, color="#FF1744"), run_time=0.4)
                     if hl_label:
-                        hl_text = Text(hl_label, font_size=12, color="#ef4444", weight=BOLD)
+                        hl_text = Text(hl_label, font_size=12, color=RED_DOWN, weight=BOLD)
                         hl_text.next_to(pt, UP, buff=0.2)
                         self.play(FadeIn(hl_text), run_time=0.2)
 
@@ -962,7 +1259,9 @@ class TimeseriesScene(MovingCameraScene):
 '''
 
 
+
 # ── Horizontal bar chart ──────────────────────────────────────────────────
+
 
 
 def _gen_horizontal_bar(instruction: dict) -> str:
@@ -998,8 +1297,9 @@ class HorizontalBarScene(Scene):
         start_y = 2.0
 
         bars = VGroup()
+        bar_rects = []
         for i, (lbl, val, col) in enumerate(zip(labels, values, colors)):
-            y = start_y - i * (bar_height + 0.25)
+            y = start_y - i * (bar_height + 0.3)
             width = (val / max_val) * bar_max_width
 
             # Label on left
@@ -1007,10 +1307,11 @@ class HorizontalBarScene(Scene):
             label.move_to(LEFT * 5.5 + UP * y)
             label.align_to(LEFT * 5.5, RIGHT)
 
-            # Bar
-            bar = Rectangle(
+            # Bar with rounded corners
+            bar = RoundedRectangle(
+                corner_radius=0.06,
                 width=0.01, height=bar_height,
-                color=col, fill_opacity=0.85, stroke_width=0,
+                color=col, fill_opacity=0.9, stroke_width=0,
             )
             bar.move_to(LEFT * 1.8 + UP * y, aligned_edge=LEFT)
 
@@ -1018,14 +1319,21 @@ class HorizontalBarScene(Scene):
             val_text = Text(f"{{val:,.0f}}", font_size=14, color=col, weight=BOLD)
             val_text.next_to(bar, RIGHT, buff=0.15)
 
-            self.play(FadeIn(label), run_time=0.15)
+            self.play(FadeIn(label), run_time=0.12)
             self.play(
                 bar.animate.stretch_to_fit_width(max(width, 0.05)),
-                run_time=0.4,
+                run_time=0.35,
+                rate_func=smooth,
             )
             val_text.next_to(bar, RIGHT, buff=0.15)
-            self.play(FadeIn(val_text), run_time=0.15)
+            self.play(FadeIn(val_text), run_time=0.12)
             bars.add(label, bar, val_text)
+            bar_rects.append(bar)
+
+        # Indicate the largest bar
+        if values and bar_rects:
+            max_idx = values.index(max(values))
+            self.play(Indicate(bar_rects[max_idx], scale_factor=1.05, color="#FF1744"), run_time=0.5)
 
         if source:
             src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
@@ -1035,6 +1343,7 @@ class HorizontalBarScene(Scene):
         self.wait(3)
         self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
 '''
+
 
 
 # ── Grouped bar chart ────────────────────────────────────────────────────
@@ -1084,7 +1393,7 @@ class GroupedBarScene(Scene):
             y_range=[0, max_val * 1.2, max_val * 0.25 or 1],
             x_length=10.5,
             y_length=5,
-            axis_config={{"color": "#555555"}},
+            axis_config={{"color": "#c0c0c0"}},
         )
         axes.next_to(title, DOWN, buff=0.35)
         self.play(Create(axes), run_time=0.5)
@@ -1144,6 +1453,7 @@ class GroupedBarScene(Scene):
 # ── Donut chart ───────────────────────────────────────────────────────────
 
 
+
 def _gen_donut_chart(instruction: dict) -> str:
     data = instruction.get("data", {})
     labels = data.get("labels", [])
@@ -1182,21 +1492,23 @@ class DonutChartScene(Scene):
             sector = AnnularSector(
                 inner_radius=1.2, outer_radius=2.3,
                 angle=angle, start_angle=start_angle,
-                color=col, fill_opacity=0.9,
-                stroke_color="#1a1a2e", stroke_width=3,
+                color=col, fill_opacity=0.95,
+                stroke_color="{BG_DARK}", stroke_width=3,
             )
             sectors.add(sector)
             start_angle += angle
 
         sectors.move_to(LEFT * 1.5 + DOWN * 0.3)
 
-        # Animate sectors one by one
-        for sector in sectors:
-            self.play(Create(sector), run_time=0.3)
+        # Animate sectors with staggered reveal
+        self.play(
+            LaggedStart(*[GrowFromCenter(s) for s in sectors], lag_ratio=0.15),
+            run_time=max(1.0, len(sectors) * 0.25),
+        )
 
         # Center text
         if center_value:
-            cv = Text(center_value, font_size=36, color="{TEXT_COLOR}", weight=BOLD)
+            cv = Text(center_value, font_size=40, color="{TEXT_COLOR}", weight=BOLD)
             cv.move_to(sectors.get_center() + UP * 0.1)
             self.play(FadeIn(cv, scale=0.5), run_time=0.3)
         if center_label:
@@ -1217,6 +1529,13 @@ class DonutChartScene(Scene):
         legend.move_to(RIGHT * 3.5 + DOWN * 0.3)
         self.play(FadeIn(legend), run_time=0.4)
 
+        # Indicate the largest sector
+        # Pause before highlighting the dominant sector
+        if values:
+            max_idx = values.index(max(values))
+            self.wait(1.2)
+            self.play(Indicate(sectors[max_idx], scale_factor=1.06, color="#FFD60A"), run_time=0.6)
+
         if source:
             src = Text(f"Source: {{source}}", font_size=12, color="{MUTED}")
             src.to_edge(DOWN, buff=0.15).to_edge(RIGHT, buff=0.3)
@@ -1225,3 +1544,100 @@ class DonutChartScene(Scene):
         self.wait(3)
         self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.5)
 '''
+
+
+
+def _gen_pdf_forensic(instruction: dict) -> str:
+    """Generate Manim code for the PDF Forensic effect."""
+    from effects_catalog.templates.pdf_forensic import generate
+    return generate(instruction)
+
+
+def _gen_forensic_zoom(instruction: dict) -> str:
+    """Generate Manim code for the Forensic Zoom effect."""
+    from effects_catalog.templates.forensic_zoom import generate
+    return generate(instruction)
+
+
+def _gen_volatility_shadow(instruction: dict) -> str:
+    """Generate Manim code for the Volatility Shadow effect."""
+    from effects_catalog.templates.volatility_shadow import generate
+    return generate(instruction)
+
+
+def _gen_relative_velocity(instruction: dict) -> str:
+    """Generate Manim code for the Relative Velocity effect."""
+    from effects_catalog.templates.relative_velocity import generate
+    return generate(instruction)
+
+
+def _gen_contextual_heatmap(instruction: dict) -> str:
+    """Generate Manim code for the Contextual Heatmap effect."""
+    from effects_catalog.templates.contextual_heatmap import generate
+    return generate(instruction)
+
+
+def _gen_bull_bear_projection(instruction: dict) -> str:
+    """Generate Manim code for the Bull vs Bear Projection effect."""
+    from effects_catalog.templates.bull_bear_projection import generate
+    return generate(instruction)
+
+
+def _gen_moat_radar(instruction: dict) -> str:
+    """Generate Manim code for the Moat Radar effect."""
+    from effects_catalog.templates.moat_radar import generate
+    return generate(instruction)
+
+
+def _gen_atomic_reveal(instruction: dict) -> str:
+    """Generate Manim code for the Atomic Reveal effect."""
+    from effects_catalog.templates.atomic_reveal import generate
+    return generate(instruction)
+
+
+def _gen_liquidity_shock(instruction: dict) -> str:
+    """Generate Manim code for the Liquidity Shock effect."""
+    from effects_catalog.templates.liquidity_shock import generate
+    return generate(instruction)
+
+
+def _gen_momentum_glow(instruction: dict) -> str:
+    """Generate Manim code for the Momentum Glow effect."""
+    from effects_catalog.templates.momentum_glow import generate
+    return generate(instruction)
+
+
+def _gen_regime_shift(instruction: dict) -> str:
+    """Generate Manim code for the Regime Shift effect."""
+    from effects_catalog.templates.regime_shift import generate
+    return generate(instruction)
+
+
+def _gen_speed_ramp(instruction: dict) -> str:
+    """Generate Manim code for the Speed Ramp effect."""
+    from effects_catalog.templates.speed_ramp import generate
+    return generate(instruction)
+
+
+def _gen_capital_flow(instruction: dict) -> str:
+    """Generate Manim code for the Capital Flow effect."""
+    from effects_catalog.templates.capital_flow import generate
+    return generate(instruction)
+
+
+def _gen_compounding_explosion(instruction: dict) -> str:
+    """Generate Manim code for the Compounding Explosion effect."""
+    from effects_catalog.templates.compounding_explosion import generate
+    return generate(instruction)
+
+
+def _gen_market_share_territory(instruction: dict) -> str:
+    """Generate Manim code for the Market Share Territory effect."""
+    from effects_catalog.templates.market_share_territory import generate
+    return generate(instruction)
+
+
+def _gen_historical_rank(instruction: dict) -> str:
+    """Generate Manim code for the Historical Rank effect."""
+    from effects_catalog.templates.historical_rank import generate
+    return generate(instruction)

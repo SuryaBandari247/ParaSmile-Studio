@@ -1,0 +1,745 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Video Script Schema",
+    "version": "2.0.0",
+    "description": "Schema for generating faceless technical video scripts. The output JSON drives the full rendering pipeline: voice synthesis, stock footage download, data chart rendering, and FFmpeg compositing. Use this schema to produce valid payloads that the engine can render into 1080p/30fps videos."
+  },
+  "components": {
+    "schemas": {
+      "VideoScript": {
+        "type": "object",
+        "required": ["title", "scenes"],
+        "description": "Top-level video script. Contains a title and an ordered list of scenes that get rendered and stitched into the final video.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Video title. Used for file naming and displayed in the UI. Keep concise and descriptive. Example: 'NVIDIA vs AMD: The GPU Revenue War (2024)'."
+          },
+          "scenes": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Ordered list of scenes. Each scene becomes one video clip. Aim for 5-15 scenes per video. Scenes are stitched in scene_number order with transitions between them.",
+            "items": {
+              "$ref": "#/components/schemas/Scene"
+            }
+          }
+        }
+      },
+
+      "Scene": {
+        "type": "object",
+        "required": ["scene_number", "narration_text", "emotion", "visual_instruction"],
+        "description": "A single scene in the video. Combines narration audio with a visual element. The narration_text drives scene duration (~150 words/minute).",
+        "properties": {
+          "scene_number": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-based sequential scene order. Must start at 1 and increment by 1. Controls the order scenes appear in the final video."
+          },
+          "narration_text": {
+            "type": "string",
+            "description": "Voiceover text spoken during this scene. This text is synthesized to audio and drives scene duration. Keep between 20-60 words for good pacing (roughly 8-24 seconds). Write in a natural, conversational tone — not robotic or overly formal."
+          },
+          "emotion": {
+            "$ref": "#/components/schemas/Emotion",
+            "description": "Emotional tone of the narration. Affects voice synthesis parameters (speed, pitch, emphasis). Match to content: 'analytical' for data breakdowns, 'excited' for surprising numbers, 'curious' for questions, 'serious' for warnings."
+          },
+          "visual_instruction": {
+            "$ref": "#/components/schemas/VisualInstruction"
+          }
+        }
+      },
+
+      "VisualInstruction": {
+        "type": "object",
+        "required": ["type", "title", "data"],
+        "description": "Defines what the viewer sees during a scene. The 'type' field determines which rendering pipeline is used and which fields are valid inside 'data'.",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/VisualType",
+            "description": "The visual scene type. This is the most important field — it controls whether the scene shows stock footage, a data chart, a code snippet, etc. Choose based on what best communicates the scene's content."
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 60,
+            "description": "Short label for this scene. Used as heading in text overlays, chart titles, and for internal identification. Keep under 60 characters."
+          },
+          "transition": {
+            "$ref": "#/components/schemas/Transition",
+            "default": "fade",
+            "description": "Transition effect when cutting FROM the previous scene INTO this one. Vary between scenes for visual interest. Use 'smooth*' between related data scenes, 'circle*' for reveals, 'fade*' for topic changes. Don't use the same transition for every scene."
+          },
+          "data": {
+            "type": "object",
+            "description": "Type-specific configuration. The valid fields depend entirely on the 'type' value. See the discriminated union under DataByVisualType for exact field specs per type.",
+            "oneOf": [
+              { "$ref": "#/components/schemas/StockVideoData" },
+              { "$ref": "#/components/schemas/StockWithTextData" },
+              { "$ref": "#/components/schemas/StockWithStatData" },
+              { "$ref": "#/components/schemas/StockQuoteData" },
+              { "$ref": "#/components/schemas/SocialCardData" },
+              { "$ref": "#/components/schemas/DataChartData" },
+              { "$ref": "#/components/schemas/CodeSnippetData" },
+              { "$ref": "#/components/schemas/TextOverlayData" },
+              { "$ref": "#/components/schemas/BulletRevealData" },
+              { "$ref": "#/components/schemas/ComparisonData" },
+              { "$ref": "#/components/schemas/FullscreenStatementData" },
+              { "$ref": "#/components/schemas/StatCalloutData" },
+              { "$ref": "#/components/schemas/SectionTitleData" },
+              { "$ref": "#/components/schemas/QuoteBlockData" }
+            ]
+          }
+        }
+      },
+
+      "VisualType": {
+        "type": "string",
+        "description": "Determines the rendering pipeline for this scene. Choose the type that best matches the scene content.",
+        "enum": [
+          "stock_video",
+          "stock_with_text",
+          "stock_with_stat",
+          "stock_quote",
+          "social_card",
+          "data_chart",
+          "code_snippet",
+          "text_overlay",
+          "section_title",
+          "bullet_reveal",
+          "stat_callout",
+          "quote_block",
+          "comparison",
+          "fullscreen_statement",
+          "reddit_post"
+        ],
+        "x-enum-descriptions": {
+          "stock_video": "B-roll footage with just a title overlay. Use when the footage itself tells the story. Minimal text. Rendering: downloads stock footage from Pexels based on keywords.",
+          "stock_with_text": "B-roll footage with heading + body text overlay. Default choice for intro, outro, and narrative scenes. Rendering: downloads stock footage, overlays styled text.",
+          "stock_with_stat": "B-roll footage with a single large stat value + label + subtitle. Use for highlighting one key number (e.g. '$3.1T Market Cap'). Rendering: downloads stock footage, overlays large stat.",
+          "stock_quote": "B-roll footage with a quote + attribution overlay. Use for expert quotes, user comments, or notable statements. Rendering: downloads stock footage, overlays styled quote.",
+          "social_card": "Styled social media post mockup (Reddit/Twitter/HN). Use when referencing a specific social media post or comment. Rendering: renders UI mockup over dark background.",
+          "data_chart": "Animated data visualization (bar, line, donut, timeseries, etc). Use for ANY numerical data, comparisons, trends, or financial metrics. Supports live Yahoo Finance auto-fetch for stock data. Rendering: modern infographic style with 3-phase animation (axis construction → data reveal → labels/badges).",
+          "code_snippet": "Syntax-highlighted code block on dark background. Use when showing actual code, terminal commands, or configuration. Rendering: dark theme code block with syntax colors.",
+          "text_overlay": "Simple text on dark background. No stock footage. Use for simple title cards or when no visual is needed. Rendering: white text on dark background.",
+          "section_title": "Large section divider title. Use between major sections of the video to signal a topic change. Rendering: large animated title text.",
+          "bullet_reveal": "Animated bullet point list. Use for listing features, steps, pros/cons, or key points. Rendering: bullets appear one by one with animation.",
+          "stat_callout": "Large animated stat number on dark background. No stock footage. Use for dramatic single-number reveals. Rendering: large number with label, animated entrance.",
+          "quote_block": "Styled quote on dark background. No stock footage. Use for quotes when you don't want B-roll behind it. Rendering: styled quote text with attribution.",
+          "comparison": "Side-by-side comparison layout. Use for A vs B comparisons. Rendering: split-screen layout with items on each side.",
+          "fullscreen_statement": "Single bold statement filling the screen. Use for dramatic emphasis or key takeaways. Rendering: large bold text, centered.",
+          "reddit_post": "Reddit post mockup. Mapped to social_card internally with Reddit styling. Use specifically for Reddit references."
+        }
+      },
+
+      "Emotion": {
+        "type": "string",
+        "description": "Emotional tone of the narration. Affects voice synthesis speed, pitch, and emphasis. Match to the scene content for natural delivery.",
+        "enum": [
+          "neutral", "curious", "confident", "excited", "surprised",
+          "analytical", "impressed", "thoughtful", "serious",
+          "humorous", "skeptical", "dramatic"
+        ],
+        "x-enum-descriptions": {
+          "neutral": "Default, matter-of-fact delivery. Use when no specific emotion is needed.",
+          "curious": "Asking questions, exploring ideas. Use for 'have you ever wondered...' moments.",
+          "confident": "Stating facts, presenting data with authority. Use for strong claims backed by data.",
+          "excited": "Revealing surprising data, big numbers, breakthroughs. Use for 'wow' moments.",
+          "surprised": "Unexpected findings, plot twists in the data. Use for genuinely surprising reveals.",
+          "analytical": "Breaking down numbers, explaining methodology. Use for deep dives and data analysis.",
+          "impressed": "Reacting to impressive stats or achievements. Use for acknowledging remarkable results.",
+          "thoughtful": "Reflecting on implications, drawing conclusions. Use for wrap-up and takeaway scenes.",
+          "serious": "Warnings, risks, important caveats. Use for cautionary or high-stakes content.",
+          "humorous": "Light moments, funny observations. Use sparingly for comic relief.",
+          "skeptical": "Questioning claims, debunking. Use for 'but is it really...' moments.",
+          "dramatic": "Building tension, cliffhangers. Use for dramatic reveals and suspense."
+        }
+      },
+
+      "Transition": {
+        "type": "string",
+        "description": "FFmpeg xfade transition effect when cutting from the previous scene into this one. Vary these between scenes for visual interest.",
+        "default": "fade",
+        "enum": [
+          "none", "fade", "fadeblack", "fadewhite", "dissolve",
+          "smoothleft", "smoothright", "smoothup", "smoothdown",
+          "wipeleft", "wiperight", "wipeup", "wipedown",
+          "slideleft", "slideright", "slideup", "slidedown",
+          "circlecrop", "circleclose", "circleopen", "rectcrop",
+          "diagtl", "diagtr", "diagbl", "diagbr", "radial",
+          "horzopen", "horzclose", "vertopen", "vertclose",
+          "revealleft", "revealright", "revealup", "revealdown",
+          "coverleft", "coverright", "coverup", "coverdown",
+          "pixelize", "zoomin", "squeezeh", "squeezev",
+          "hlwind", "hrwind", "vuwind", "vdwind",
+          "hlslice", "hrslice", "vuslice", "vdslice"
+        ],
+        "x-enum-groups": {
+          "clean": {
+            "values": ["none", "fade", "fadeblack", "fadewhite", "dissolve"],
+            "description": "Safe defaults. 'fade' works for any scene. 'fadeblack' for dramatic pauses between sections."
+          },
+          "smooth": {
+            "values": ["smoothleft", "smoothright", "smoothup", "smoothdown"],
+            "description": "Flowing between related scenes. Best for sequences of data charts or related content."
+          },
+          "directional": {
+            "values": ["wipeleft", "wiperight", "wipeup", "wipedown", "slideleft", "slideright", "slideup", "slidedown"],
+            "description": "Scene changes with a sense of direction/progression. Good for moving through a timeline."
+          },
+          "geometric": {
+            "values": ["circlecrop", "circleclose", "circleopen", "rectcrop", "diagtl", "diagtr", "diagbl", "diagbr", "radial"],
+            "description": "Eye-catching transitions. 'circleopen' is great for reveals. Use for emphasis."
+          },
+          "reveal": {
+            "values": ["horzopen", "horzclose", "vertopen", "vertclose", "revealleft", "revealright", "revealup", "revealdown"],
+            "description": "Unveiling new information. Good for chart reveals and data presentations."
+          },
+          "cover": {
+            "values": ["coverleft", "coverright", "coverup", "coverdown"],
+            "description": "One scene sliding over another. Good for topic changes."
+          },
+          "stylized": {
+            "values": ["pixelize", "zoomin", "squeezeh", "squeezev"],
+            "description": "Creative/tech feel. 'pixelize' is great for tech content. Use sparingly."
+          },
+          "glitch": {
+            "values": ["hlwind", "hrwind", "vuwind", "vdwind", "hlslice", "hrslice", "vuslice", "vdslice"],
+            "description": "Edgy/modern feel. Use very sparingly for emphasis only."
+          }
+        }
+      },
+
+      "ChartType": {
+        "type": "string",
+        "description": "Determines which chart visualization to render inside a data_chart scene.",
+        "enum": ["bar", "line", "area", "horizontal_bar", "grouped_bar", "pie", "donut", "timeseries"],
+        "x-enum-descriptions": {
+          "bar": "Vertical bar chart with colored bars and value labels on top. Best for comparing discrete categories (e.g. company revenues, product sales).",
+          "line": "Line chart with smooth thick lines. Best for trends over labeled periods (e.g. yearly revenue, quarterly growth). Use 'labels' for x-axis.",
+          "area": "Same as line but with filled area beneath. Best when you want to emphasize volume/magnitude.",
+          "horizontal_bar": "Horizontal bars sorted top to bottom. Best for rankings and leaderboards (e.g. market cap ranking, top 10 lists).",
+          "grouped_bar": "Multiple colored bars side by side per category. Best for comparing multiple series across categories (e.g. Q1-Q4 revenue for 3 products). Requires 'series' field.",
+          "pie": "Pie chart with percentage labels. Best for showing parts of a whole. Use when ≤6 segments. Prefer 'donut' when you have a total to show.",
+          "donut": "Donut chart with center value/label and legend. Best for parts-of-whole with a summary stat in the center (e.g. '$60.9B Total Revenue'). Always include center_value and center_label.",
+          "timeseries": "Date-based line chart with formatted date axis and optional event markers. Best for stock prices, monthly metrics, historical trends with actual dates. Supports Yahoo Finance auto-fetch via ticker/tickers fields. Use when x-axis represents real dates."
+        }
+      },
+
+      "TextPosition": {
+        "type": "string",
+        "description": "Controls where the text overlay appears on the video frame.",
+        "default": "center",
+        "enum": ["center", "top", "bottom", "left", "right", "top_left", "top_right", "bottom_left", "bottom_right"],
+        "x-enum-descriptions": {
+          "center": "Centered horizontally and vertically. Default and most common choice.",
+          "top": "Centered horizontally, near the top of the frame.",
+          "bottom": "Centered horizontally, near the bottom. Good when footage has action in the upper area.",
+          "left": "Left-aligned, vertically centered.",
+          "right": "Right-aligned, vertically centered.",
+          "top_left": "Top-left corner. Good for secondary info.",
+          "top_right": "Top-right corner.",
+          "bottom_left": "Bottom-left corner.",
+          "bottom_right": "Bottom-right corner."
+        }
+      },
+
+      "BRollDensity": {
+        "type": "string",
+        "description": "Controls how many stock footage clips are downloaded and jump-cut together for a scene.",
+        "default": "low",
+        "enum": ["low", "medium", "high"],
+        "x-enum-descriptions": {
+          "low": "Single clip, minimal cuts. Calm, focused feel. Default for most scenes.",
+          "medium": "2 clips with a cut. Moderate pacing.",
+          "high": "3 clips with jump cuts. Fast-paced, energetic feel. Best for hooks and intros."
+        }
+      },
+
+      "SocialPlatform": {
+        "type": "string",
+        "description": "Determines the UI mockup style for social_card scenes.",
+        "enum": ["reddit", "twitter", "hackernews"],
+        "x-enum-descriptions": {
+          "reddit": "Reddit post/comment UI mockup with upvotes, subreddit, username.",
+          "twitter": "Twitter/X post UI mockup with likes and retweets.",
+          "hackernews": "Hacker News post UI mockup with points and comments."
+        }
+      },
+
+      "StockVideoData": {
+        "type": "object",
+        "required": ["keywords"],
+        "description": "Data for stock_video scenes. Use when the footage itself tells the story with minimal overlay. Generate this when type='stock_video'.",
+        "properties": {
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "2-3 descriptive search phrases for Pexels stock footage. Be specific and visual — 'server room blue lights' is better than 'technology'. NEVER use generic terms like 'man in office' or 'business meeting'."
+          },
+          "title": {
+            "type": "string",
+            "description": "Optional title text overlaid on the video. If omitted, uses the scene's visual_instruction.title."
+          }
+        }
+      },
+
+      "StockWithTextData": {
+        "type": "object",
+        "required": ["heading", "keywords"],
+        "description": "Data for stock_with_text scenes. B-roll footage with heading + body text overlay. Default choice for intro/outro/narrative scenes. Generate this when type='stock_with_text'.",
+        "properties": {
+          "heading": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "Large heading text overlaid on the video. Keep under 40 characters for readability on screen."
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 80,
+            "default": "",
+            "description": "Smaller subtitle text below the heading. Keep under 80 characters. Can be empty string."
+          },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "2-3 descriptive Pexels search phrases. Be specific and visual. NEVER use generic terms."
+          },
+          "position": {
+            "$ref": "#/components/schemas/TextPosition",
+            "default": "center",
+            "description": "Where the text appears on screen. Default 'center'."
+          },
+          "broll_density": {
+            "$ref": "#/components/schemas/BRollDensity",
+            "default": "low",
+            "description": "How many stock clips to use. Use 'high' for hooks/intros, 'low' for calm scenes."
+          }
+        }
+      },
+
+      "StockWithStatData": {
+        "type": "object",
+        "required": ["value", "label", "keywords"],
+        "description": "Data for stock_with_stat scenes. B-roll footage with a single large stat value + label. Use for highlighting one key number. Generate this when type='stock_with_stat'.",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "The stat value displayed large on screen. Pre-formatted — displayed as-is. Include formatting like commas, %, +, $. Examples: '22,000+', '$3.1T', '460%', '14 cores', '220,000°C'."
+          },
+          "label": {
+            "type": "string",
+            "description": "Description of what the value represents. Displayed below the value in smaller text. Example: 'Multi-Core Geekbench Score'."
+          },
+          "subtitle": {
+            "type": "string",
+            "default": "",
+            "description": "Additional context line below the label. Good for comparisons like '25% faster than M3 Pro'."
+          },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "Pexels search keywords for background footage. Be specific and visual."
+          }
+        }
+      },
+
+      "StockQuoteData": {
+        "type": "object",
+        "required": ["quote", "attribution", "keywords"],
+        "description": "Data for stock_quote scenes. B-roll footage with a quote + attribution overlay. Use for expert quotes or notable statements. Generate this when type='stock_quote'.",
+        "properties": {
+          "quote": {
+            "type": "string",
+            "maxLength": 150,
+            "description": "The quote text. Displayed in large styled text with quotation marks. Keep under 150 characters for readability."
+          },
+          "attribution": {
+            "type": "string",
+            "description": "Who said it and where. Format: '— Name, Title/Source'. Example: '— Jensen Huang, NVIDIA CEO'."
+          },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "Pexels search keywords for background footage."
+          }
+        }
+      },
+
+      "SocialCardData": {
+        "type": "object",
+        "required": ["platform", "username", "body"],
+        "description": "Data for social_card scenes. Renders a styled social media post mockup. Use when referencing a specific social media post or comment. Generate this when type='social_card' or type='reddit_post'.",
+        "properties": {
+          "platform": {
+            "$ref": "#/components/schemas/SocialPlatform",
+            "description": "Social platform. Determines the UI mockup style (Reddit upvotes, Twitter likes, etc)."
+          },
+          "username": {
+            "type": "string",
+            "description": "Display username. Include platform prefix: 'u/' for Reddit, '@' for Twitter. Example: 'u/chipfanatic'."
+          },
+          "post_title": {
+            "type": "string",
+            "default": "",
+            "description": "Post title (mainly for Reddit). Can be empty for Twitter-style posts."
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "The post/comment body text. Keep under 200 characters for readability on screen."
+          },
+          "upvotes": {
+            "type": "integer",
+            "default": 0,
+            "description": "Upvote/like count displayed on the card. Use realistic numbers."
+          },
+          "comments": {
+            "type": "integer",
+            "default": 0,
+            "description": "Comment count displayed on the card."
+          },
+          "subreddit": {
+            "type": "string",
+            "default": "",
+            "description": "Subreddit name (Reddit only). Include 'r/' prefix. Example: 'r/technology'."
+          }
+        }
+      },
+
+      "DataChartData": {
+        "type": "object",
+        "required": ["chart_type"],
+        "description": "Data for data_chart scenes. Renders animated data visualizations with modern infographic style. Supports TWO MODES: (1) Static data — provide labels + values/series directly. Use for custom data like revenue breakdowns. (2) Yahoo Finance auto-fetch — provide ticker/tickers + period, leave values/series empty. Renderer fetches live price data automatically. Use for stock prices and market comparisons. PREFER auto-fetch for any publicly traded data. Generate this when type='data_chart'.",
+        "properties": {
+          "chart_type": {
+            "$ref": "#/components/schemas/ChartType",
+            "description": "Which chart to render. Choose based on what story the data tells. Use 'timeseries' for date-based data (stock prices), 'bar' for category comparisons, 'donut' for parts-of-whole, 'line' for trends with label-based x-axis."
+          },
+          "labels": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "X-axis labels or category names. Required for static data mode (bar, line, horizontal_bar, grouped_bar, pie, donut). Not needed when using Yahoo Finance auto-fetch. Keep labels short (under 15 chars each)."
+          },
+          "values": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "Single series numeric values. Must be same length as labels. Use raw numbers for unit='$' — formatting is automatic (e.g. 60900000000 renders as '$60.9B'). Use 'series' instead for multi-series charts. Leave empty/omit when using Yahoo Finance auto-fetch."
+          },
+          "series": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChartSeries" },
+            "description": "Multiple named data series. Use instead of 'values' for multi-series line, grouped_bar, or timeseries charts. Each series gets a different color automatically. Leave empty/omit when using Yahoo Finance auto-fetch."
+          },
+          "unit": {
+            "type": "string",
+            "default": "",
+            "description": "Value unit for axis formatting. Set to '$' for automatic currency formatting ($1.5K, $2.3M, $60.9B). Set to '%' when using value_type='pct_change'. Leave empty for plain numbers.",
+            "examples": ["$", "%", ""]
+          },
+          "y_label": {
+            "type": "string",
+            "default": "",
+            "description": "Y-axis label text. Examples: 'Revenue (USD)', 'Price per Share', 'Units Sold', 'YoY Revenue Growth %'."
+          },
+          "subtitle": {
+            "type": "string",
+            "default": "",
+            "description": "Explanatory text shown at the bottom of the chart. Use for context like 'Fiscal Year 2024', '+460% growth in 5 years', or 'Percentage change over 2 years'. Always include for credibility."
+          },
+          "source": {
+            "type": "string",
+            "default": "",
+            "description": "Data source attribution shown bottom-left in small text. Always include for credibility. Auto-set to 'Yahoo Finance' when using ticker mode. Examples: 'SEC Filings', 'Yahoo Finance', 'Company 10-K', 'ASML Annual Reports'."
+          },
+          "duration": {
+            "type": "number",
+            "description": "Override scene duration in seconds. If omitted, duration is calculated from narration_text word count (~150 words/minute). Only set this if you need a specific duration."
+          },
+          "center_value": {
+            "type": "string",
+            "default": "",
+            "description": "DONUT ONLY. Large text displayed in the center of the donut hole. Pre-formatted — displayed as-is. Examples: '$60.9B', '78%', '€38.8B'. Always include for donut charts."
+          },
+          "center_label": {
+            "type": "string",
+            "default": "",
+            "description": "DONUT ONLY. Small text below center_value. Describes what the center value represents. Examples: 'Total Revenue', 'Market Share', 'Order Backlog'. Always include for donut charts."
+          },
+          "dates": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "TIMESERIES ONLY (static mode). Date strings for the x-axis. Supported formats: 'YYYY-MM-DD', 'YYYY-MM', 'YYYY'. Must be in chronological order. The renderer auto-formats axis labels. Not needed when using Yahoo Finance auto-fetch."
+          },
+          "series_name": {
+            "type": "string",
+            "description": "TIMESERIES ONLY (single series static mode). Name for the single series shown in legend. Example: 'NVIDIA Revenue'."
+          },
+          "events": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChartEvent" },
+            "description": "TIMESERIES ONLY. Key events to mark on the chart as dashed vertical lines with label badges. Use for product launches, earnings dates, market events. Keep to 2-4 events max with labels under 20 characters."
+          },
+          "ticker": {
+            "type": "string",
+            "default": "",
+            "description": "YAHOO FINANCE AUTO-FETCH. Single stock ticker symbol. The renderer fetches live closing price history from Yahoo Finance at render time. No dates/values needed. Example: 'NVDA', 'ASML', 'AAPL'. Use for single-line stock price charts."
+          },
+          "tickers": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": [],
+            "maxItems": 5,
+            "description": "YAHOO FINANCE AUTO-FETCH. Multiple ticker symbols for comparison charts. Each becomes a separate colored line/series. Max 5 tickers. Example: ['NVDA', 'AMD', 'INTC']. Best with value_type='pct_change' when comparing stocks at different price levels."
+          },
+          "period": {
+            "type": "string",
+            "default": "1y",
+            "description": "YAHOO FINANCE AUTO-FETCH. Lookback period for price history.",
+            "enum": ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"],
+            "x-enum-descriptions": {
+              "1mo": "1 month. Best with interval='1d'.",
+              "3mo": "3 months. Best with interval='1d'.",
+              "6mo": "6 months. Best with interval='1wk'.",
+              "1y": "1 year. Default. Best with interval='1wk'.",
+              "2y": "2 years. Best with interval='1wk'.",
+              "5y": "5 years. Best with interval='1mo'.",
+              "max": "All available history. Best with interval='1mo'."
+            }
+          },
+          "interval": {
+            "type": "string",
+            "default": "1wk",
+            "description": "YAHOO FINANCE AUTO-FETCH. Data point interval. Choose based on period to avoid noisy charts: '1d' for 1mo-3mo, '1wk' for 6mo-2y, '1mo' for 5y+.",
+            "enum": ["1d", "1wk", "1mo"],
+            "x-enum-descriptions": {
+              "1d": "Daily data points. Use for short periods (1mo-3mo). Too noisy for longer periods.",
+              "1wk": "Weekly data points. Default. Good balance for 6mo-2y periods.",
+              "1mo": "Monthly data points. Use for long periods (5y+). Smoothest lines."
+            }
+          },
+          "value_type": {
+            "type": "string",
+            "default": "close",
+            "description": "YAHOO FINANCE AUTO-FETCH. How to display fetched values.",
+            "enum": ["close", "pct_change"],
+            "x-enum-descriptions": {
+              "close": "Raw closing price in USD. Default. Use for single-ticker price charts. Set unit='$'.",
+              "pct_change": "Percentage change indexed from the start date (0%). Use when comparing tickers at different price levels (e.g. NVDA at $800 vs INTC at $30). Each line starts at 0% and shows relative performance. End-of-line badges show total % change."
+            }
+          }
+        }
+      },
+
+      "ChartSeries": {
+        "type": "object",
+        "required": ["name", "values"],
+        "description": "A named data series for multi-series charts (line, grouped_bar, timeseries).",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Series name shown in the chart legend. Examples: 'NVIDIA', 'Company A', 'Product X'."
+          },
+          "values": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "Numeric data points for this series. Must be same length as labels/dates array."
+          }
+        }
+      },
+
+      "ChartEvent": {
+        "type": "object",
+        "required": ["date", "label"],
+        "description": "A key event marker on a timeseries chart. Rendered as a dashed vertical line with a label badge.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date of the event. Same format as the dates array (YYYY-MM-DD or YYYY-MM). Example: '2024-03'."
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 20,
+            "description": "Short text shown next to the vertical marker line. Keep under 20 characters. Example: 'Blackwell announced'."
+          }
+        }
+      },
+
+      "CodeSnippetData": {
+        "type": "object",
+        "required": ["language", "code"],
+        "description": "Data for code_snippet scenes. Renders syntax-highlighted code on dark background. Use for showing actual code, terminal commands, or configuration. Generate this when type='code_snippet'.",
+        "properties": {
+          "language": {
+            "type": "string",
+            "description": "Programming language for syntax highlighting.",
+            "examples": ["python", "javascript", "typescript", "bash", "sql", "rust", "go", "yaml", "json", "java", "c", "cpp"]
+          },
+          "code": {
+            "type": "string",
+            "description": "The actual code to display. Use \\n for newlines. Keep under 15 lines for readability on screen."
+          },
+          "title": {
+            "type": "string",
+            "default": "",
+            "description": "Optional title shown above the code block."
+          }
+        }
+      },
+
+      "TextOverlayData": {
+        "type": "object",
+        "required": ["text"],
+        "description": "Data for text_overlay scenes. Simple text on dark background with no stock footage. Use for title cards or when no visual is needed. Generate this when type='text_overlay'.",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text to display on screen."
+          }
+        }
+      },
+
+      "BulletRevealData": {
+        "type": "object",
+        "required": ["bullets"],
+        "description": "Data for bullet_reveal scenes. Animated bullet points that appear one by one. Use for listing features, steps, key points, pros/cons, or timelines. Generate this when type='bullet_reveal'.",
+        "properties": {
+          "bullets": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 6,
+            "description": "The bullet points to reveal one by one. Keep each bullet under 50 characters. 3-6 bullets is ideal."
+          },
+          "title": {
+            "type": "string",
+            "default": "",
+            "description": "Heading shown above the bullet list."
+          }
+        }
+      },
+
+      "ComparisonData": {
+        "type": "object",
+        "required": ["left_title", "right_title", "left_items", "right_items"],
+        "description": "Data for comparison scenes. Side-by-side A vs B layout. Use for comparing two options, technologies, or approaches. Generate this when type='comparison'.",
+        "properties": {
+          "left_title": {
+            "type": "string",
+            "description": "Title for the left column. Example: 'DUV (Nikon/Canon)'."
+          },
+          "right_title": {
+            "type": "string",
+            "description": "Title for the right column. Example: 'EUV (ASML)'."
+          },
+          "left_items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Items/features for the left side. Keep each item concise."
+          },
+          "right_items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Items/features for the right side. Keep each item concise."
+          }
+        }
+      },
+
+      "FullscreenStatementData": {
+        "type": "object",
+        "required": ["statement"],
+        "description": "Data for fullscreen_statement scenes. Single bold statement filling the screen. Use for dramatic emphasis, key takeaways, or closing lines. Generate this when type='fullscreen_statement'.",
+        "properties": {
+          "statement": {
+            "type": "string",
+            "maxLength": 60,
+            "description": "The text displayed large and centered on screen. Keep under 60 characters for maximum impact. Example: 'ASML: The starting line, the track, and the finish line.'"
+          }
+        }
+      },
+
+      "StatCalloutData": {
+        "type": "object",
+        "required": ["value", "label"],
+        "description": "Data for stat_callout scenes. Large animated stat number on dark background (no stock footage). Use for dramatic single-number reveals when you don't want B-roll behind it. Generate this when type='stat_callout'.",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "The stat displayed very large on screen. Pre-formatted. Examples: '$3.1T', '460%', '50,000'."
+          },
+          "label": {
+            "type": "string",
+            "description": "What the stat represents. Displayed below the value. Example: 'NVIDIA Market Cap'."
+          },
+          "subtitle": {
+            "type": "string",
+            "default": "",
+            "description": "Additional context. Example: 'Briefly surpassed Apple in 2024'."
+          }
+        }
+      },
+
+      "SectionTitleData": {
+        "type": "object",
+        "required": ["heading"],
+        "description": "Data for section_title scenes. Large section divider. Use between major sections of the video to signal a topic change. Generate this when type='section_title'.",
+        "properties": {
+          "heading": {
+            "type": "string",
+            "description": "Large section title text. Example: 'Part 2: The Data'."
+          },
+          "subtitle": {
+            "type": "string",
+            "default": "",
+            "description": "Smaller text below the heading. Example: 'Let\\'s look at the numbers'."
+          }
+        }
+      },
+
+      "QuoteBlockData": {
+        "type": "object",
+        "required": ["quote", "attribution"],
+        "description": "Data for quote_block scenes. Styled quote on dark background (no stock footage). Use for quotes when you don't want B-roll behind it. Generate this when type='quote_block'.",
+        "properties": {
+          "quote": {
+            "type": "string",
+            "description": "The quote text to display."
+          },
+          "attribution": {
+            "type": "string",
+            "description": "Who said it. Format: '— Author Name'. Example: '— Jensen Huang'."
+          }
+        }
+      }
+    }
+  },
+
+  "x-generation-rules": {
+    "description": "Rules the LLM MUST follow when generating a VideoScript JSON payload.",
+    "rules": [
+      "Every scene MUST have scene_number (sequential from 1), narration_text, emotion, and visual_instruction.",
+      "visual_instruction MUST have type, title, transition, and data.",
+      "Use data_chart whenever presenting numerical data, comparisons, or trends. Do NOT describe numbers in text overlays when a chart would be clearer.",
+      "Use timeseries chart_type when x-axis represents actual dates. Use line when x-axis is just labels (years, quarters without specific dates).",
+      "PREFER Yahoo Finance auto-fetch (ticker/tickers) over hardcoded values for any publicly traded stock, ETF, or index data. This keeps charts current.",
+      "When comparing stocks at different price levels, use value_type='pct_change' so the chart shows relative performance.",
+      "For Yahoo Finance charts, choose interval based on period: '1d' for 1mo-3mo, '1wk' for 6mo-2y, '1mo' for 5y+.",
+      "For unit='$', values MUST be raw numbers (e.g. 60900000000 not '60.9B') — the renderer formats automatically.",
+      "For data_chart, always include source attribution and subtitle for context.",
+      "For donut charts, always include center_value and center_label.",
+      "Keep narration_text between 20-60 words per scene (~8-24 seconds).",
+      "Vary transitions between scenes. Don't use fade for every scene.",
+      "Match emotion to narration tone: analytical for data, excited for surprises, curious for questions.",
+      "Keywords for stock footage NEVER generic like 'man in office'. Use specific visual terms.",
+      "Output ONLY the JSON object. No markdown, no explanation, no code fences."
+    ]
+  }
+}

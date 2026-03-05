@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import * as visualsApi from '@/api/visuals'
 import * as scriptsApi from '@/api/scripts'
 import { StatusBadge } from '@/components/common/StatusBadge'
+import { EffectBrowser } from '@/components/visual/EffectBrowser'
 import type { Scene, FootageResult, WikimediaImageResult, PixabayVideoResult, UnsplashPhotoResult, WebSocketMessage, ScriptVersion, SuggestKeywordsResponse } from '@/types'
 
 type SearchSource = 'pexels' | 'wikimedia' | 'pixabay' | 'unsplash' | 'all'
@@ -30,6 +31,8 @@ export function VisualPanel({ projectId, lastMessage }: Props) {
   const [selectedSuggestions, setSelectedSuggestions] = useState<Record<number, Set<number>>>({})
   const [editedKeywords, setEditedKeywords] = useState<Record<string, string>>({})
   const [suggestError, setSuggestError] = useState<Record<number, string>>({})
+  const [showEffectBrowser, setShowEffectBrowser] = useState(false)
+  const [effectBrowserTarget, setEffectBrowserTarget] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     const s = await visualsApi.listScenes(projectId)
@@ -373,6 +376,24 @@ export function VisualPanel({ projectId, lastMessage }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Effect Browser Modal */}
+      {showEffectBrowser && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.5)' }}>
+          <div style={{ background: '#1a1a1a', borderRadius: '12px', maxWidth: '800px', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
+            <EffectBrowser
+              onClose={() => { setShowEffectBrowser(false); setEffectBrowserTarget(null) }}
+              onApply={async (identifier, defaults) => {
+                if (effectBrowserTarget != null) {
+                  await visualsApi.updateScene(projectId, effectBrowserTarget, { visual_type: identifier, visual_data: defaults } as Partial<Scene>)
+                  load()
+                }
+                setShowEffectBrowser(false)
+                setEffectBrowserTarget(null)
+              }}
+            />
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -382,6 +403,9 @@ export function VisualPanel({ projectId, lastMessage }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {scenes.length > 0 && (
+            <button type="button" onClick={() => setShowEffectBrowser(true)} className="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-sm hover:bg-purple-100">Effect Browser</button>
+          )}
           {scenes.length > 0 && (
             <button type="button" onClick={handleAddScene} className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm hover:bg-gray-100">+ Add Scene</button>
           )}
@@ -722,6 +746,13 @@ export function VisualPanel({ projectId, lastMessage }: Props) {
                         className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100"
                       >
                         Search Footage
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setEffectBrowserTarget(scene.id); setShowEffectBrowser(true) }}
+                        className="px-2 py-1 text-xs bg-purple-50 text-purple-600 rounded hover:bg-purple-100"
+                      >
+                        Browse Effects
                       </button>
                       {['stock_video', 'stock_with_text', 'stock_with_stat', 'stock_quote'].includes(scene.visual_type) && (
                         <button

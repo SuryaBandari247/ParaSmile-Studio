@@ -1,0 +1,17 @@
+{
+  "data_chart": {
+    "sub_type_field": "chart_type",
+    "mappings": {
+      "timeseries": "timeseries",
+      "bar": "bar_chart",
+      "donut": "donut",
+      "horizontal_bar": "horizontal_bar",
+      "grouped_bar": "grouped_bar",
+      "line": "line_chart",
+      "pie": "pie_chart"
+    },
+    "default": "timeseries"
+  },
+  "line_chart": { "target": "timeseries" },
+  "pie_chart": { "target": "donut" }
+}

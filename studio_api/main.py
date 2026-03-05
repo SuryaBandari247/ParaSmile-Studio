@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from studio_api.config import StudioConfig
 from studio_api.database import get_connection, run_migrations
 from studio_api.models.script_schema import ScriptSchemaReference
-from studio_api.routers import audio, music, projects, quickstart, render, research, scripts, topics, visuals, websocket
+from studio_api.routers import audio, effects, music, projects, quickstart, render, research, scripts, topics, visuals, websocket
 
 logging.basicConfig(level=getattr(logging, StudioConfig.LOG_LEVEL, logging.INFO))
 logger = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ def create_app() -> FastAPI:
     app.include_router(scripts.router)
     app.include_router(audio.router)
     app.include_router(visuals.router)
+    app.include_router(effects.router)
     app.include_router(music.router)
     app.include_router(render.router)
     app.include_router(websocket.router)

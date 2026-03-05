@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Review Script JSON Quality",
+  "description": "When a video_script JSON is created in output/, review it for keyword quality, chart placement, and schema compliance.",
+  "version": "1.0.0",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "output/*_video_script.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A video_script JSON was just created. Review it for quality using the #script-to-json steering guide.\n\nCheck and fix these issues IN-PLACE (edit the file directly):\n1. DURATION: Count total narration words across all scenes. Target is 1,500-1,800 words (10-12 min at 150 wpm). If too short, add scenes with data charts, comparisons, or context. If too long, trim.\n2. KEYWORDS: Are they cinematic and Pexels-friendly? Replace any generic keywords ('technology', 'business meeting', 'man in office') with specific visual terms per the steering guide.\n3. CHARTS: Are data_chart scenes used wherever the narration mentions numbers, financials, stock prices, or market data? Add missing charts.\n4. VISUAL TYPES: Is each scene using the right type? (stock_with_stat for single numbers, data_chart for data, comparison for A-vs-B, etc.)\n5. TRANSITIONS: Are they varied? Fix any consecutive duplicates.\n6. EMOTIONS: Do they match the narration tone?\n7. SCHEMA: Validate against output/video_script_schema.json — ensure all required fields are present.\n\nFix any issues directly in the JSON file. Do not create a new file."
+  }
+}

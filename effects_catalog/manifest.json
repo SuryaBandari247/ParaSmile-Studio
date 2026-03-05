@@ -1,0 +1,1057 @@
+[
+  {
+    "identifier": "text_overlay",
+    "display_name": "Text Overlay",
+    "category": "text",
+    "description": "Animated text overlay with configurable position, font size, and color. Fades in title and body text with upward shift.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "description": "Body text content to display" },
+        "position": { "type": "string", "enum": ["center", "top", "bottom"], "default": "center", "description": "Vertical position of the text" },
+        "font_size": { "type": "integer", "default": 48, "description": "Font size for the body text" }
+      },
+      "required": ["text"]
+    },
+    "preview_config": { "text": "Sample Overlay" },
+    "reference_video_path": "assets/text_overlay.mp4",
+    "template_module": "templates.text_overlay",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "bar_chart",
+    "display_name": "Bar Chart",
+    "category": "charts",
+    "description": "Animated vertical bar chart with progressive bar reveal, value labels, and automatic highlight on the highest bar.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "Category labels for each bar" },
+        "values": { "type": "array", "items": { "type": "number" }, "description": "Numeric values for each bar" },
+        "title": { "type": "string", "default": "", "description": "Chart title" },
+        "colors": { "type": "array", "items": { "type": "string" }, "description": "Custom color hex codes per bar" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" },
+        "value_suffix": { "type": "string", "default": "", "description": "Suffix appended to value labels" },
+        "highlights": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "label": { "type": "string" } } }, "description": "Specific bars to highlight with Indicate()" }
+      },
+      "required": ["labels", "values"]
+    },
+    "preview_config": { "labels": ["Q1", "Q2", "Q3", "Q4"], "values": [100, 150, 120, 180], "title": "Quarterly Revenue" },
+    "reference_video_path": "assets/bar_chart.mp4",
+    "template_module": "templates.bar_chart",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "line_chart",
+    "display_name": "Line Chart",
+    "category": "charts",
+    "description": "Animated line chart with MovingCameraScene tracking, progressive line drawing, data point dots, and highlight indicators.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "X-axis labels" },
+        "values": { "type": "array", "items": { "type": "number" }, "description": "Y-axis values" },
+        "title": { "type": "string", "default": "", "description": "Chart title" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" },
+        "highlights": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "label": { "type": "string" } } }, "description": "Data points to highlight" }
+      },
+      "required": ["labels", "values"]
+    },
+    "preview_config": { "labels": ["Jan", "Feb", "Mar", "Apr"], "values": [10, 25, 18, 30] },
+    "reference_video_path": "assets/line_chart.mp4",
+    "template_module": "templates.line_chart",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "pie_chart",
+    "display_name": "Pie Chart",
+    "category": "charts",
+    "description": "Animated pie chart with sector reveal and percentage labels positioned radially.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "Sector labels" },
+        "values": { "type": "array", "items": { "type": "number" }, "description": "Sector values" },
+        "title": { "type": "string", "default": "", "description": "Chart title" }
+      },
+      "required": ["labels", "values"]
+    },
+    "preview_config": { "labels": ["EUV", "DUV", "Other"], "values": [55, 30, 15] },
+    "reference_video_path": "assets/pie_chart.mp4",
+    "template_module": "templates.pie_chart",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "code_snippet",
+    "display_name": "Code Snippet",
+    "category": "text",
+    "description": "Syntax-highlighted code block with configurable language and line-by-line reveal animation.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "description": "Source code to display" },
+        "language": { "type": "string", "default": "python", "description": "Programming language for syntax highlighting" },
+        "title": { "type": "string", "default": "", "description": "Title above the code block" },
+        "highlight_lines": { "type": "array", "items": { "type": "integer" }, "description": "Line numbers to highlight" }
+      },
+      "required": ["code"]
+    },
+    "preview_config": { "code": "print('hello world')", "language": "python", "title": "Example" },
+    "reference_video_path": "assets/code_snippet.mp4",
+    "template_module": "templates.code_snippet",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "reddit_post",
+    "display_name": "Reddit Post",
+    "category": "social",
+    "description": "Animated Reddit post card with subreddit header, upvote count, username, and comment preview in dark Reddit styling.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "subreddit": { "type": "string", "description": "Subreddit name (e.g. r/investing)" },
+        "post_title": { "type": "string", "description": "Post title text" },
+        "username": { "type": "string", "default": "u/anonymous", "description": "Reddit username" },
+        "upvotes": { "type": "integer", "default": 0, "description": "Upvote count" },
+        "comments": { "type": "integer", "default": 0, "description": "Comment count" },
+        "body": { "type": "string", "default": "", "description": "Post body text" }
+      },
+      "required": ["subreddit", "post_title"]
+    },
+    "preview_config": { "subreddit": "r/investing", "post_title": "ASML earnings beat expectations", "upvotes": 1234, "comments": 89 },
+    "reference_video_path": "assets/reddit_post.mp4",
+    "template_module": "templates.reddit_post",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "stat_callout",
+    "display_name": "Stat Callout",
+    "category": "text",
+    "description": "Large animated statistic with label, optional subtitle, and dramatic pulse effect. Uses GrowFromCenter for the value.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "string", "description": "The statistic value (e.g. '$42B')" },
+        "label": { "type": "string", "description": "Label below the value" },
+        "subtitle": { "type": "string", "default": "", "description": "Additional context below the label" },
+        "delta": { "type": "string", "default": "", "description": "Delta indicator text" },
+        "delta_color": { "type": "string", "default": "", "description": "Color for the delta indicator" }
+      },
+      "required": ["value", "label"]
+    },
+    "preview_config": { "value": "$42B", "label": "Revenue", "subtitle": "FY 2024" },
+    "reference_video_path": "assets/stat_callout.mp4",
+    "template_module": "templates.stat_callout",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "quote_block",
+    "display_name": "Quote Block",
+    "category": "text",
+    "description": "Styled quote with left accent bar, large opening quote mark, and attribution line. Animated reveal.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "quote": { "type": "string", "description": "The quote text" },
+        "attribution": { "type": "string", "default": "", "description": "Who said it" },
+        "source": { "type": "string", "default": "", "description": "Source document or context" }
+      },
+      "required": ["quote"]
+    },
+    "preview_config": { "quote": "The market can stay irrational longer than you can stay solvent.", "attribution": "John Maynard Keynes" },
+    "reference_video_path": "assets/quote_block.mp4",
+    "template_module": "templates.quote_block",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "section_title",
+    "display_name": "Section Title",
+    "category": "text",
+    "description": "Full-screen section title card with optional section number, subtitle, and accent underline animation.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "heading": { "type": "string", "description": "Main heading text" },
+        "subtitle": { "type": "string", "default": "", "description": "Subtitle below the heading" },
+        "number": { "type": "string", "default": "", "description": "Section number displayed above heading" }
+      },
+      "required": ["heading"]
+    },
+    "preview_config": { "heading": "Chapter 1", "subtitle": "The Beginning", "number": "01" },
+    "reference_video_path": "assets/section_title.mp4",
+    "template_module": "templates.section_title",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "bullet_reveal",
+    "display_name": "Bullet Reveal",
+    "category": "text",
+    "description": "Sequential bullet point reveal with heading, accent underline, and staggered fade-in animation.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "heading": { "type": "string", "default": "", "description": "Heading above the bullet list" },
+        "bullets": { "type": "array", "items": { "type": "string" }, "description": "List of bullet point texts" }
+      },
+      "required": ["bullets"]
+    },
+    "preview_config": { "heading": "Key Takeaways", "bullets": ["Revenue up 25%", "Margins expanding", "Guidance raised"] },
+    "reference_video_path": "assets/bullet_reveal.mp4",
+    "template_module": "templates.bullet_reveal",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "comparison",
+    "display_name": "Comparison",
+    "category": "charts",
+    "description": "Side-by-side comparison layout with center divider, color-coded columns, and animated bullet reveal per side.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "left_title": { "type": "string", "description": "Left column header" },
+        "right_title": { "type": "string", "description": "Right column header" },
+        "left_items": { "type": "array", "items": { "type": "string" }, "description": "Left column bullet items" },
+        "right_items": { "type": "array", "items": { "type": "string" }, "description": "Right column bullet items" },
+        "title": { "type": "string", "default": "", "description": "Overall comparison title" }
+      },
+      "required": ["left_title", "right_title", "left_items", "right_items"]
+    },
+    "preview_config": { "left_title": "ASML", "right_title": "TSMC", "left_items": ["EUV monopoly", "High margins"], "right_items": ["Volume leader", "Diverse clients"], "title": "Semiconductor Giants" },
+    "reference_video_path": "assets/comparison.mp4",
+    "template_module": "templates.comparison",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "fullscreen_statement",
+    "display_name": "Fullscreen Statement",
+    "category": "text",
+    "description": "Bold fullscreen text statement with dramatic fade-in and optional emphasis word highlighting in accent color.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "statement": { "type": "string", "description": "The statement text to display" },
+        "emphasis_word": { "type": "string", "default": "", "description": "Word to highlight in accent color" },
+        "font_size": { "type": "integer", "default": 42, "description": "Font size for the statement" }
+      },
+      "required": ["statement"]
+    },
+    "preview_config": { "statement": "This changes everything.", "emphasis_word": "everything" },
+    "reference_video_path": "assets/fullscreen_statement.mp4",
+    "template_module": "templates.fullscreen_statement",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "data_chart",
+    "display_name": "Data Chart (Generic)",
+    "category": "data",
+    "description": "Generic data chart dispatcher — routes to specific chart type based on chart_type field. Supports Yahoo Finance enrichment for ticker-based data.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "chart_type": { "type": "string", "enum": ["timeseries", "bar", "donut", "horizontal_bar", "grouped_bar", "line", "pie", "area"], "default": "timeseries", "description": "Sub-chart type to render" },
+        "ticker": { "type": "string", "description": "Yahoo Finance ticker symbol" },
+        "tickers": { "type": "array", "items": { "type": "string" }, "description": "Multiple ticker symbols for multi-line charts" },
+        "period": { "type": "string", "default": "1y", "description": "Data period (1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, max)" },
+        "interval": { "type": "string", "default": "1wk", "description": "Data interval (1d, 1wk, 1mo)" },
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "Category labels (for non-ticker charts)" },
+        "values": { "type": "array", "items": { "type": "number" }, "description": "Numeric values (for non-ticker charts)" },
+        "series": { "type": "array", "items": { "type": "object" }, "description": "Multi-series data" },
+        "events": { "type": "array", "items": { "type": "object" }, "description": "Event markers with date and label" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" },
+        "value_type": { "type": "string", "enum": ["close", "pct_change"], "default": "close", "description": "Value type for ticker data" }
+      },
+      "required": []
+    },
+    "preview_config": { "chart_type": "timeseries", "ticker": "AAPL", "period": "1y" },
+    "reference_video_path": "assets/data_chart.mp4",
+    "template_module": "templates.data_chart",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "timeseries",
+    "display_name": "Timeseries Chart",
+    "category": "data",
+    "description": "Animated timeseries with MovingCameraScene tracking, event markers, end-of-line value badges, and multi-line support. Supports Yahoo Finance enrichment.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "ticker": { "type": "string", "description": "Yahoo Finance ticker symbol" },
+        "tickers": { "type": "array", "items": { "type": "string" }, "description": "Multiple ticker symbols for multi-line comparison" },
+        "period": { "type": "string", "default": "1y", "description": "Data period (1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, max)" },
+        "interval": { "type": "string", "default": "1wk", "description": "Data interval (1d, 1wk, 1mo)" },
+        "events": { "type": "array", "items": { "type": "object", "properties": { "date": { "type": "string" }, "label": { "type": "string" } } }, "description": "Event markers with date and label" },
+        "value_type": { "type": "string", "enum": ["close", "pct_change"], "default": "close", "description": "Value type — absolute close or percentage change" },
+        "dates": { "type": "array", "items": { "type": "string" }, "description": "Pre-supplied date labels" },
+        "series": { "type": "array", "items": { "type": "object" }, "description": "Pre-supplied series data" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" },
+        "highlights": { "type": "array", "items": { "type": "object" }, "description": "Data points to highlight" }
+      },
+      "required": []
+    },
+    "preview_config": { "ticker": "AAPL", "period": "1y", "events": [{ "date": "2024-06-10", "label": "WWDC 2024" }] },
+    "reference_video_path": "assets/timeseries.mp4",
+    "template_module": "templates.timeseries",
+    "sync_points": ["line_start", "event_marker_reveal", "end_badge"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "horizontal_bar",
+    "display_name": "Horizontal Bar Chart",
+    "category": "charts",
+    "description": "Animated horizontal bar chart with progressive bar stretch, value labels, and automatic highlight on the largest bar.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "Category labels for each bar" },
+        "values": { "type": "array", "items": { "type": "number" }, "description": "Numeric values for each bar" },
+        "title": { "type": "string", "default": "", "description": "Chart title" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" },
+        "value_suffix": { "type": "string", "default": "", "description": "Suffix appended to value labels" }
+      },
+      "required": ["labels", "values"]
+    },
+    "preview_config": { "labels": ["ASML", "TSMC", "Intel", "Samsung"], "values": [80, 65, 40, 55], "title": "Market Share %" },
+    "reference_video_path": "assets/horizontal_bar.mp4",
+    "template_module": "templates.horizontal_bar",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "grouped_bar",
+    "display_name": "Grouped Bar Chart",
+    "category": "charts",
+    "description": "Multi-series grouped bar chart with color-coded groups, legend, and animated reveal per group.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "Group labels (x-axis categories)" },
+        "series": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "values": { "type": "array", "items": { "type": "number" } } } }, "description": "Named data series with values per group" },
+        "title": { "type": "string", "default": "", "description": "Chart title" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" }
+      },
+      "required": ["labels", "series"]
+    },
+    "preview_config": { "labels": ["2022", "2023", "2024"], "series": [{"name": "Revenue", "values": [10, 15, 20]}, {"name": "Profit", "values": [3, 5, 8]}], "title": "Financial Performance" },
+    "reference_video_path": "assets/grouped_bar.mp4",
+    "template_module": "templates.grouped_bar",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "donut",
+    "display_name": "Donut Chart",
+    "category": "charts",
+    "description": "Animated donut chart with staggered sector reveal, center value/label, and source attribution.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "labels": { "type": "array", "items": { "type": "string" }, "description": "Sector labels" },
+        "values": { "type": "array", "items": { "type": "number" }, "description": "Sector values" },
+        "title": { "type": "string", "default": "", "description": "Chart title" },
+        "center_value": { "type": "string", "default": "", "description": "Value displayed in the donut center" },
+        "center_label": { "type": "string", "default": "", "description": "Label displayed below center value" },
+        "source": { "type": "string", "default": "", "description": "Data source attribution" }
+      },
+      "required": ["labels", "values"]
+    },
+    "preview_config": { "labels": ["EUV", "DUV", "Other"], "values": [55, 30, 15], "title": "ASML Revenue Mix", "center_value": "€28B" },
+    "reference_video_path": "assets/donut.mp4",
+    "template_module": "templates.donut",
+    "sync_points": [],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "pdf_forensic",
+    "display_name": "PDF Forensic",
+    "category": "editorial",
+    "description": "Animate highlights on actual company PDF reports (annual reports, earnings, SEC filings). Converts a PDF page to a high-res image, then uses Manim to animate highlight rectangles, camera zooms, and sequential reveals on the source document.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "pdf_path": { "type": "string", "description": "Path to the PDF file" },
+        "page_number": { "type": "integer", "minimum": 1, "description": "1-indexed page number to render" },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bbox": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "width": { "type": "number" },
+                  "height": { "type": "number" }
+                }
+              },
+              "text_search": { "type": "string", "description": "Text to search for on the page (resolves to bbox)" },
+              "style": { "type": "string", "enum": ["rectangle", "underline", "margin_annotation"], "default": "rectangle" },
+              "color": { "type": "string", "default": "#FF453A" },
+              "opacity": { "type": "number", "default": 0.3, "minimum": 0, "maximum": 1 }
+            }
+          },
+          "description": "Highlight regions to animate sequentially"
+        }
+      },
+      "required": ["pdf_path", "page_number", "highlights"]
+    },
+    "preview_config": {
+      "pdf_path": "sample_report.pdf",
+      "page_number": 1,
+      "highlights": [
+        { "bbox": { "x": 0.1, "y": 0.3, "width": 0.4, "height": 0.05 }, "style": "rectangle", "color": "#FF453A", "opacity": 0.3 }
+      ]
+    },
+    "reference_video_path": "assets/pdf_forensic.mp4",
+    "template_module": "templates.pdf_forensic",
+    "sync_points": ["page_reveal", "highlight_zoom"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "forensic_zoom",
+    "display_name": "Forensic Zoom",
+    "category": "data",
+    "description": "Camera dive into a specific event date on a timeseries chart. Blurs surrounding context and highlights the target price action with a golden glow rectangle. Supports jump-cut and travel zoom modes.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "focus_date": { "type": "string", "format": "date", "description": "ISO date to zoom into" },
+        "focus_window_days": { "type": "integer", "default": 30, "description": "Days around focus_date to show" },
+        "glow_color": { "type": "string", "default": "#FFD700", "description": "Hex color for the glow rectangle" },
+        "blur_opacity": { "type": "number", "default": 0.15, "minimum": 0, "maximum": 1, "description": "Opacity for non-focus regions" },
+        "zoom_mode": { "type": "string", "enum": ["travel", "jump_cut"], "default": "jump_cut", "description": "Camera transition mode" },
+        "wide_hold": { "type": "number", "default": 1.0, "minimum": 0, "description": "Seconds to hold wide chart before zoom" },
+        "ticker": { "type": "string", "description": "Yahoo Finance ticker symbol" },
+        "tickers": { "type": "array", "items": { "type": "string" } },
+        "period": { "type": "string", "default": "1y" },
+        "events": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["focus_date"]
+    },
+    "preview_config": {
+      "focus_date": "2024-08-05",
+      "focus_window_days": 30,
+      "ticker": "NVDA",
+      "period": "1y",
+      "events": [{ "date": "2024-08-05", "label": "Yen Carry Unwind" }]
+    },
+    "reference_video_path": "assets/forensic_zoom.mp4",
+    "template_module": "templates.forensic_zoom",
+    "sync_points": ["wide_view", "zoom_in", "glow_highlight"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "volatility_shadow",
+    "display_name": "Volatility Shadow",
+    "category": "data",
+    "description": "Drawdown 'Pain Zone' visualization — semi-transparent area fill between running all-time high and current price during drawdown periods. Shadow dynamically grows and shrinks with the line.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "shadow_color": { "type": "string", "default": "#FF453A", "description": "Color for the drawdown shadow" },
+        "shadow_opacity": { "type": "number", "default": 0.2, "minimum": 0, "maximum": 1, "description": "Opacity of the shadow fill" },
+        "show_drawdown_pct": { "type": "boolean", "default": false, "description": "Show drawdown percentage labels" },
+        "ticker": { "type": "string", "description": "Yahoo Finance ticker symbol" },
+        "tickers": { "type": "array", "items": { "type": "string" } },
+        "period": { "type": "string", "default": "1y" },
+        "events": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": []
+    },
+    "preview_config": {
+      "ticker": "NVDA",
+      "period": "2y",
+      "shadow_color": "#FF453A",
+      "shadow_opacity": 0.2,
+      "show_drawdown_pct": true
+    },
+    "reference_video_path": "assets/volatility_shadow.mp4",
+    "template_module": "templates.volatility_shadow",
+    "sync_points": ["line_draw", "shadow_reveal"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "relative_velocity",
+    "display_name": "Relative Velocity Comparison",
+    "category": "data",
+    "description": "Dual timeseries with dynamic vertical arrow between series and real-time percentage spread label, visualizing the performance gap as lines diverge.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "series_a_name": { "type": "string", "description": "Name of the first series" },
+        "series_b_name": { "type": "string", "description": "Name of the second series" },
+        "show_delta_arrow": { "type": "boolean", "default": true, "description": "Show the delta arrow between series" },
+        "delta_format": { "type": "string", "default": "+{:.0f}% Lead", "description": "Format string for the spread label" },
+        "arrow_color": { "type": "string", "default": "#FFFFFF", "description": "Color of the delta arrow" },
+        "ticker": { "type": "string" },
+        "tickers": { "type": "array", "items": { "type": "string" } },
+        "period": { "type": "string", "default": "1y" },
+        "series": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["series_a_name", "series_b_name"]
+    },
+    "preview_config": {
+      "series_a_name": "NVDA",
+      "series_b_name": "AMD",
+      "tickers": ["NVDA", "AMD"],
+      "period": "1y"
+    },
+    "reference_video_path": "assets/relative_velocity.mp4",
+    "template_module": "templates.relative_velocity",
+    "sync_points": ["lines_drawn", "delta_arrow"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "contextual_heatmap",
+    "display_name": "Contextual Heatmap",
+    "category": "data",
+    "description": "Background color gradient on timeseries charts that shifts from green to red based on a benchmark index's performance, providing macroeconomic context.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "benchmark_ticker": { "type": "string", "description": "Yahoo Finance ticker for the benchmark (e.g. ^GSPC)" },
+        "green_color": { "type": "string", "default": "#00E676" },
+        "red_color": { "type": "string", "default": "#FF453A" },
+        "heatmap_opacity": { "type": "number", "default": 0.15, "minimum": 0, "maximum": 1 },
+        "benchmark_label": { "type": "string", "default": "S&P 500" },
+        "ticker": { "type": "string" },
+        "period": { "type": "string", "default": "1y" }
+      },
+      "required": ["benchmark_ticker"]
+    },
+    "preview_config": {
+      "benchmark_ticker": "^GSPC",
+      "ticker": "AAPL",
+      "period": "1y",
+      "benchmark_label": "S&P 500"
+    },
+    "reference_video_path": "assets/contextual_heatmap.mp4",
+    "template_module": "templates.contextual_heatmap",
+    "sync_points": ["heatmap_reveal", "line_draw"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "bull_bear_projection",
+    "display_name": "Bull vs Bear Projection",
+    "category": "data",
+    "description": "Three-path future projection from today's price — Optimistic, Realistic, Pessimistic — using configurable compound growth rates with dashed fan-out lines.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "optimistic_rate": { "type": "number", "default": 0.25, "description": "Annual growth rate for bull case" },
+        "realistic_rate": { "type": "number", "default": 0.10, "description": "Annual growth rate for base case" },
+        "pessimistic_rate": { "type": "number", "default": -0.15, "description": "Annual growth rate for bear case" },
+        "projection_years": { "type": "integer", "default": 3, "minimum": 1 },
+        "projection_labels": { "type": "array", "items": { "type": "string" }, "default": ["Bull", "Base", "Bear"] },
+        "ticker": { "type": "string" },
+        "period": { "type": "string", "default": "1y" }
+      },
+      "required": []
+    },
+    "preview_config": {
+      "ticker": "AAPL",
+      "period": "2y",
+      "optimistic_rate": 0.25,
+      "realistic_rate": 0.10,
+      "pessimistic_rate": -0.15,
+      "projection_years": 3
+    },
+    "reference_video_path": "assets/bull_bear_projection.mp4",
+    "template_module": "templates.bull_bear_projection",
+    "sync_points": ["today_marker", "fan_out"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "moat_radar",
+    "display_name": "Moat Comparison Radar",
+    "category": "data",
+    "description": "Spider/radar chart comparing two companies across multiple metrics with overlapping semi-transparent polygons, sequential animation, and Indicate on the max-advantage axis.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "company_a_name": { "type": "string" },
+        "company_a_values": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 100 } },
+        "company_b_name": { "type": "string" },
+        "company_b_values": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 100 } },
+        "metric_labels": { "type": "array", "items": { "type": "string" } },
+        "company_a_color": { "type": "string", "default": "#0A84FF" },
+        "company_b_color": { "type": "string", "default": "#FF453A" }
+      },
+      "required": ["company_a_name", "company_a_values", "company_b_name", "company_b_values", "metric_labels"]
+    },
+    "preview_config": {
+      "company_a_name": "ASML",
+      "company_a_values": [95, 80, 70, 85, 90],
+      "company_b_name": "TSMC",
+      "company_b_values": [60, 90, 85, 75, 70],
+      "metric_labels": ["Technology", "Revenue", "Margins", "R&D", "Market Share"]
+    },
+    "reference_video_path": "assets/moat_radar.mp4",
+    "template_module": "templates.moat_radar",
+    "sync_points": ["axes_reveal", "company_a_polygon", "company_b_polygon", "advantage_indicate"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "atomic_reveal",
+    "display_name": "Atomic Component Reveal",
+    "category": "editorial",
+    "description": "Central entity with component parts flying out radially or in grid layout, with sentiment color-coding and highlight emphasis on the key driver or risk factor.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "entity_name": { "type": "string", "description": "Central entity label" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "type": "string" },
+              "sentiment": { "type": "string", "enum": ["positive", "negative", "neutral"] }
+            },
+            "required": ["name", "value", "sentiment"]
+          }
+        },
+        "highlight_component": { "type": "string", "description": "Component name to emphasize" },
+        "layout": { "type": "string", "enum": ["radial", "grid"], "default": "radial" }
+      },
+      "required": ["entity_name", "components", "highlight_component"]
+    },
+    "preview_config": {
+      "entity_name": "ASML",
+      "components": [
+        { "name": "EUV Revenue", "value": "+28%", "sentiment": "positive" },
+        { "name": "China Risk", "value": "Export Ban", "sentiment": "negative" },
+        { "name": "Backlog", "value": "€39B", "sentiment": "positive" },
+        { "name": "DUV Legacy", "value": "Stable", "sentiment": "neutral" }
+      ],
+      "highlight_component": "EUV Revenue",
+      "layout": "radial"
+    },
+    "reference_video_path": "assets/atomic_reveal.mp4",
+    "template_module": "templates.atomic_reveal",
+    "sync_points": ["entity_reveal", "components_fly_out", "highlight_pulse"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.0
+  },
+  {
+    "identifier": "liquidity_shock",
+    "display_name": "Liquidity Shock",
+    "category": "narrative",
+    "description": "Vertical flash line at shock date with ripple shockwave ring, camera micro-shake, and brief price-line glow to viscerally convey crashes or black swan events.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "shock_date": { "type": "string", "format": "date", "description": "ISO date of the shock event" },
+        "shock_color": { "type": "string", "default": "#FF453A" },
+        "shock_intensity": { "type": "number", "default": 0.7, "minimum": 0, "maximum": 1, "description": "Camera shake magnitude 0-1" },
+        "shock_label": { "type": "string", "description": "Text label displayed near the flash line" }
+      },
+      "required": ["shock_date"]
+    },
+    "preview_config": {
+      "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01", "2024-06-01"],
+      "values": [100, 105, 110, 85, 80, 90],
+      "shock_date": "2024-04-01",
+      "shock_label": "Flash Crash"
+    },
+    "reference_video_path": "assets/liquidity_shock.mp4",
+    "template_module": "templates.liquidity_shock",
+    "sync_points": ["line_draw", "shock_flash", "ripple_expand", "label_reveal"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "momentum_glow",
+    "display_name": "Momentum Glow",
+    "category": "motion",
+    "description": "Dynamic glow intensity and color on timeseries line based on rolling slope — neon trail for high-momentum periods, fade for cooling.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "momentum_window": { "type": "integer", "default": 20, "minimum": 2, "description": "Rolling slope window in data points" },
+        "glow_color_up": { "type": "string", "default": "#00FFAA" },
+        "glow_color_down": { "type": "string", "default": "#FF453A" },
+        "glow_intensity": { "type": "number", "default": 0.8, "minimum": 0, "maximum": 1 },
+        "glow_threshold_sigma": { "type": "number", "default": 1.0, "minimum": 0, "description": "Std deviations above mean slope to activate glow" }
+      },
+      "required": []
+    },
+    "preview_config": {
+      "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01", "2024-06-01", "2024-07-01", "2024-08-01", "2024-09-01", "2024-10-01", "2024-11-01", "2024-12-01"],
+      "values": [100, 102, 108, 115, 130, 128, 120, 118, 125, 140, 155, 160],
+      "momentum_window": 3
+    },
+    "reference_video_path": "assets/momentum_glow.mp4",
+    "template_module": "templates.momentum_glow",
+    "sync_points": ["line_start", "glow_activate", "end_badge"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "regime_shift",
+    "display_name": "Regime Shift",
+    "category": "narrative",
+    "description": "Labeled color-coded background zones on timeseries for economic eras with sequential zone reveal, providing temporal context.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "regimes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "string", "format": "date" },
+              "end": { "type": "string", "format": "date" },
+              "label": { "type": "string" },
+              "color": { "type": "string" }
+            },
+            "required": ["start", "end", "label", "color"]
+          }
+        },
+        "zone_opacity": { "type": "number", "default": 0.15, "minimum": 0, "maximum": 1 }
+      },
+      "required": ["regimes"]
+    },
+    "preview_config": {
+      "dates": ["2020-01-01", "2020-06-01", "2021-01-01", "2021-06-01", "2022-01-01", "2022-06-01", "2023-01-01"],
+      "values": [100, 85, 110, 120, 115, 95, 105],
+      "regimes": [
+        { "start": "2020-01-01", "end": "2020-06-01", "label": "COVID Crash", "color": "#f85149" },
+        { "start": "2020-06-01", "end": "2021-06-01", "label": "QE Recovery", "color": "#3fb950" },
+        { "start": "2022-01-01", "end": "2022-06-01", "label": "Rate Hikes", "color": "#f0883e" }
+      ]
+    },
+    "reference_video_path": "assets/regime_shift.mp4",
+    "template_module": "templates.regime_shift",
+    "sync_points": ["axes_draw", "zone_reveal", "line_draw", "end_badge"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "speed_ramp",
+    "display_name": "Speed Ramp",
+    "category": "motion",
+    "description": "Variable playback speed across configurable time segments — fast-forward for boring periods, slow-mo for crashes.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "speed_regimes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "string", "format": "date" },
+              "end": { "type": "string", "format": "date" },
+              "speed": { "type": "number", "exclusiveMinimum": 0, "description": "Multiplier: 1.0=normal, >1=fast, <1=slow" }
+            },
+            "required": ["start", "end", "speed"]
+          }
+        },
+        "transition_frames": { "type": "integer", "default": 10, "minimum": 1, "description": "Frames to interpolate between adjacent speed regimes" }
+      },
+      "required": ["speed_regimes"]
+    },
+    "preview_config": {
+      "dates": ["2020-01-01", "2020-06-01", "2021-01-01", "2021-06-01", "2022-01-01", "2022-06-01"],
+      "values": [100, 105, 110, 85, 90, 95],
+      "speed_regimes": [
+        { "start": "2020-01-01", "end": "2021-01-01", "speed": 3.0 },
+        { "start": "2021-01-01", "end": "2021-06-01", "speed": 0.3 }
+      ]
+    },
+    "reference_video_path": "assets/speed_ramp.mp4",
+    "template_module": "templates.speed_ramp",
+    "sync_points": ["line_start", "speed_change", "end_badge"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.0
+  },
+  {
+    "identifier": "capital_flow",
+    "display_name": "Capital Flow",
+    "category": "narrative",
+    "description": "Animated directional arrows between labeled entities with arrow thickness proportional to flow amount and sequential flow reveal.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "flows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "from_entity": { "type": "string" },
+              "to_entity": { "type": "string" },
+              "flow_amount": { "type": "number", "minimum": 0 },
+              "flow_color": { "type": "string" }
+            },
+            "required": ["from_entity", "to_entity", "flow_amount"]
+          }
+        },
+        "layout": { "type": "string", "enum": ["horizontal", "circular", "custom"], "default": "horizontal" },
+        "arrow_base_width": { "type": "number", "default": 2, "minimum": 0.5 },
+        "flow_label_format": { "type": "string", "default": "${:.1f}B" },
+        "animation_duration": { "type": "number", "default": 4.0, "minimum": 0.5 }
+      },
+      "required": ["flows"]
+    },
+    "preview_config": {
+      "flows": [
+        { "from_entity": "US Equities", "to_entity": "EU Bonds", "flow_amount": 12.5, "flow_color": "#58a6ff" },
+        { "from_entity": "EU Bonds", "to_entity": "EM Debt", "flow_amount": 5.2, "flow_color": "#f0883e" },
+        { "from_entity": "EM Debt", "to_entity": "US Equities", "flow_amount": 3.1, "flow_color": "#3fb950" }
+      ],
+      "layout": "circular"
+    },
+    "reference_video_path": "assets/capital_flow.mp4",
+    "template_module": "templates.capital_flow",
+    "sync_points": ["entities_appear", "flow_arrows", "labels_reveal"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 0.5
+  },
+  {
+    "identifier": "compounding_explosion",
+    "display_name": "Compounding Explosion",
+    "category": "narrative",
+    "description": "Exponential growth curve with dramatic glow pulse at the breakpoint where compounding visually kicks in, with optional doubling markers.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "principal": { "type": "number", "exclusiveMinimum": 0 },
+        "rate": { "type": "number", "exclusiveMinimum": 0, "description": "Annual growth rate as decimal (e.g. 0.10 for 10%)" },
+        "years": { "type": "integer", "minimum": 2 },
+        "breakpoint_year": { "type": "integer", "description": "Year at which glow pulse fires; auto-detected if omitted" },
+        "explosion_color": { "type": "string", "default": "#FFD700" },
+        "line_color": { "type": "string", "default": "#FFFFFF" },
+        "show_doubling_markers": { "type": "boolean", "default": true }
+      },
+      "required": ["principal", "rate", "years"]
+    },
+    "preview_config": {
+      "principal": 10000,
+      "rate": 0.12,
+      "years": 25,
+      "explosion_color": "#FFD700"
+    },
+    "reference_video_path": "assets/compounding_explosion.mp4",
+    "template_module": "templates.compounding_explosion",
+    "sync_points": ["axes_draw", "pre_breakpoint_line", "breakpoint_pulse", "post_breakpoint_line", "end_badge"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.0
+  },
+  {
+    "identifier": "market_share_territory",
+    "display_name": "Market Share Territory",
+    "category": "data",
+    "description": "Area fills between competing timeseries lines with color-coded territory ownership and dominance shift visualization at crossover points.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "series": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "data": { "type": "array", "items": { "type": "object", "properties": { "date": { "type": "string", "format": "date" }, "value": { "type": "number" } }, "required": ["date", "value"] } },
+              "territory_color": { "type": "string" }
+            },
+            "required": ["name", "data", "territory_color"]
+          }
+        },
+        "fill_opacity": { "type": "number", "default": 0.3, "minimum": 0, "maximum": 1 }
+      },
+      "required": ["series"]
+    },
+    "preview_config": {
+      "series": [
+        { "name": "TSMC", "data": [{"date": "2024-01-01", "value": 55}, {"date": "2024-04-01", "value": 58}, {"date": "2024-07-01", "value": 52}, {"date": "2024-10-01", "value": 60}], "territory_color": "#58a6ff" },
+        { "name": "Samsung", "data": [{"date": "2024-01-01", "value": 45}, {"date": "2024-04-01", "value": 50}, {"date": "2024-07-01", "value": 54}, {"date": "2024-10-01", "value": 48}], "territory_color": "#f97583" }
+      ]
+    },
+    "reference_video_path": "assets/market_share_territory.mp4",
+    "template_module": "templates.market_share_territory",
+    "sync_points": ["territory_fill", "lines_draw", "legend_reveal"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "historical_rank",
+    "display_name": "Historical Rank",
+    "category": "data",
+    "description": "Vertical percentile ladder with labeled bands and animated marker settling into position, showing where a current value sits in its historical distribution.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "current_value": { "type": "number" },
+        "historical_values": { "type": "array", "items": { "type": "number" }, "minItems": 10 },
+        "metric_label": { "type": "string" },
+        "percentile_bands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "pct": { "type": "number", "minimum": 0, "maximum": 100 }
+            },
+            "required": ["label", "pct"]
+          },
+          "default": [
+            { "label": "Cheap", "pct": 25 },
+            { "label": "Normal", "pct": 50 },
+            { "label": "Expensive", "pct": 75 },
+            { "label": "Extreme", "pct": 95 }
+          ]
+        }
+      },
+      "required": ["current_value", "historical_values", "metric_label"]
+    },
+    "preview_config": {
+      "current_value": 28.5,
+      "historical_values": [15, 18, 20, 22, 24, 25, 26, 27, 28, 30, 32, 35, 38, 40],
+      "metric_label": "P/E Ratio"
+    },
+    "reference_video_path": "assets/historical_rank.mp4",
+    "template_module": "templates.historical_rank",
+    "sync_points": ["ladder_draw", "bands_reveal", "marker_settle", "value_label"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.0
+  }
+]

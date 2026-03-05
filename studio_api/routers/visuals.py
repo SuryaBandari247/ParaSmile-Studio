@@ -239,8 +239,15 @@ def render_scene(
     background_tasks: BackgroundTasks,
     project_id: str = Depends(_verify_project),
     conn: sqlite3.Connection = Depends(get_db),
+    quality_profile: str = "production",
 ) -> dict:
     """Kick off scene render in background. Returns immediately with scene_id."""
+    # Validate quality_profile
+    if quality_profile not in ("draft", "production"):
+        raise HTTPException(status_code=400, detail={
+            "type": "validation_error",
+            "message": f"Invalid quality_profile '{quality_profile}'. Must be 'draft' or 'production'.",
+        })
     # Verify scene exists
     svc = VisualService(conn, job_runner=JobRunner(conn, broadcast=ws_manager.broadcast_sync))
     scene = svc.get_scene(scene_id)

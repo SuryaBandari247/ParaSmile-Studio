@@ -1,0 +1,191 @@
+{
+  "title": "The Internet's Most Stupid Day",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "narration_text": "Have you ever wanted to ask a question so basic you were afraid the internet would actually set you on fire for asking it? Well, there's a holiday for that. It's called Moronic Monday.",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Hook",
+        "data": {
+          "heading": "Am I the only one who doesn't get this?",
+          "body": "",
+          "keywords": ["confused person phone", "stressed scrolling"]
+        }
+      }
+    },
+    {
+      "scene_number": 2,
+      "narration_text": "Every Monday, thousands of people flock to Moronic Monday threads. The rule? No question is too dumb. It's the one place on the web where Just Google it is a banned response.",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Concept",
+        "data": {
+          "heading": "MORONIC MONDAY",
+          "body": "The one place on the internet where no question is too dumb.",
+          "keywords": ["people typing laptop", "online community"]
+        }
+      }
+    },
+    {
+      "scene_number": 3,
+      "narration_text": "Wait, is 100k actually a lot of money in 2026, or am I just middle class now?",
+      "visual_instruction": {
+        "type": "reddit_post",
+        "title": "Finance Question",
+        "data": {
+          "subreddit": "r/finance",
+          "post_title": "Wait, is $100k actually a lot of money\nin 2026, or am I just middle class now?",
+          "upvotes": 2847,
+          "comments": 1203,
+          "username": "u/confused_millennial"
+        }
+      }
+    },
+    {
+      "scene_number": 4,
+      "narration_text": "I did one light workout, did I lose all my gains from the last three years?",
+      "visual_instruction": {
+        "type": "reddit_post",
+        "title": "Fitness Question",
+        "data": {
+          "subreddit": "r/fitness",
+          "post_title": "I did one light workout — did I lose\nall my gains from the last three years?",
+          "upvotes": 4521,
+          "comments": 892,
+          "username": "u/gym_anxiety_99"
+        }
+      }
+    },
+    {
+      "scene_number": 5,
+      "narration_text": "Is my AI chatbot actually judging me, or am I just paranoid?",
+      "visual_instruction": {
+        "type": "reddit_post",
+        "title": "Tech Question",
+        "data": {
+          "subreddit": "r/technology",
+          "post_title": "Is my AI chatbot actually judging me,\nor am I just paranoid?",
+          "upvotes": 6103,
+          "comments": 2341,
+          "username": "u/definitely_not_a_bot"
+        }
+      }
+    },
+    {
+      "scene_number": 6,
+      "narration_text": "Here's the reality: Most of us are faking it. On February 23rd, the finance threads were full of people who realized their tax withholding was wrong all year because of a single checkbox.",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Reality",
+        "data": {
+          "heading": "Most of us are faking it.",
+          "body": "",
+          "keywords": ["serious person talking", "reality check"]
+        }
+      }
+    },
+    {
+      "scene_number": 7,
+      "narration_text": "These aren't morons. They're people who decided that being slightly embarrassed for 5 minutes is better than being broke for 5 years.",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Smart Choice",
+        "data": {
+          "heading": "5 Minutes of Embarrassment",
+          "body": "vs 5 Years of Being Broke",
+          "keywords": ["person thinking decision", "crossroads choice"]
+        }
+      }
+    },
+    {
+      "scene_number": 8,
+      "narration_text": "The number one trend: the Tax Trap. Married filing jointly, both working, checked the boxes, still owe 10 thousand dollars.",
+      "visual_instruction": {
+        "type": "stock_with_stat",
+        "title": "The Tax Trap",
+        "data": {
+          "value": "$10,000",
+          "label": "UNEXPECTED TAX BILL",
+          "subtitle": "The W-4 checkbox 2(c) trap — Feb 2026",
+          "keywords": ["tax documents paperwork", "financial stress"]
+        }
+      }
+    },
+    {
+      "scene_number": 9,
+      "narration_text": "The 2c checkbox on the W-4 form is notoriously glitchy. If one spouse earns significantly more, it often under-withholds. Stop relying on the checkbox. Use the IRS Tax Withholding Estimator every quarter.",
+      "visual_instruction": {
+        "type": "bullet_reveal",
+        "title": "Fix The Tax Trap",
+        "data": {
+          "heading": "How To Fix The 2(c) Trap",
+          "bullets": [
+            "The W-4 checkbox assumes ONE income per household",
+            "If one spouse earns more, it under-withholds",
+            "Use the IRS Tax Withholding Estimator quarterly",
+            "Account for side income: crypto, 1099 gigs",
+            "Check again after any major life change"
+          ]
+        }
+      }
+    },
+    {
+      "scene_number": 10,
+      "narration_text": "It's February 2026. Is it too late to contribute for the 2025 tax year? You have time-traveling powers. You can contribute to a Solo 401k or SEP IRA for 2025 until April 15, 2026.",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Solo 401k Time Machine",
+        "data": {
+          "heading": "The Solo 401(k) Time Machine",
+          "body": "Deadline: April 15, 2026 — still lower your 2025 tax bill",
+          "keywords": ["retirement savings", "calendar deadline"]
+        }
+      }
+    },
+    {
+      "scene_number": 11,
+      "narration_text": "Your lender asks if you want to buy down your rate. Is that a scam? It's a math problem. With rates around 6 percent, buying points to drop to 5.75 takes about 4 years to break even.",
+      "visual_instruction": {
+        "type": "comparison",
+        "title": "Mortgage Points: Buy or Skip?",
+        "data": {
+          "left_title": "BUY POINTS",
+          "left_items": ["Pay upfront fee", "Lower rate: 5.75%", "Break even in ~4 years", "Best if staying 10+ years"],
+          "right_title": "SKIP POINTS",
+          "right_items": ["Keep your cash", "Higher rate: 6.0%", "No break-even needed", "Best if moving in <5 years"]
+        }
+      }
+    },
+    {
+      "scene_number": 12,
+      "narration_text": "ETH fees are down 95 percent from 2021 peaks. Does this mean nobody is using it? Actually the opposite. People moved to Layer 2s. The Mainnet is becoming a settlement layer for big institutions.",
+      "visual_instruction": {
+        "type": "stock_with_stat",
+        "title": "Ethereum Fees",
+        "data": {
+          "value": "-95%",
+          "label": "ETH FEES SINCE 2021",
+          "subtitle": "Activity moved to Layer 2s (Arbitrum, Optimism, Polygon)",
+          "keywords": ["cryptocurrency blockchain", "ethereum digital"]
+        }
+      }
+    },
+    {
+      "scene_number": 13,
+      "narration_text": "So, let's normalize it. What's the moronic question you've been too scared to ask about your money, your job, or your life? Drop it below. No judgment, just answers.",
+      "visual_instruction": {
+        "type": "stock_quote",
+        "title": "Call To Action",
+        "data": {
+          "quote": "What's the 'moronic' question you've been too scared to ask about your money, your job, or your life?",
+          "attribution": "Drop it below. No judgment — just answers.",
+          "keywords": ["community discussion", "people talking sharing"]
+        }
+      }
+    }
+  ],
+  "generated_at": "2026-02-25T14:00:00+00:00",
+  "total_word_count": 650,
+  "metadata": {"source": "manual_script", "topic": "Moronic Monday Reddit Trends"}
+}

@@ -1,0 +1,89 @@
+{
+  "title": "M4 Pro: Is Apple's Chip Actually Worth It?",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "narration_text": "Apple just dropped the M4 Pro, and everyone is losing their minds. But is it actually worth the upgrade, or is this just another spec bump dressed up in marketing?",
+      "emotion": "curious",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Hook",
+        "transition": "fade",
+        "data": {
+          "heading": "M4 Pro: Worth the Hype?",
+          "body": "",
+          "keywords": ["apple macbook pro close up", "laptop glowing dark desk"],
+          "position": "center",
+          "broll_density": "high"
+        }
+      }
+    },
+    {
+      "scene_number": 2,
+      "narration_text": "Let's start with the raw numbers. The M4 Pro pushes 14 cores, with 10 performance and 4 efficiency. Single-core Geekbench hits 3800, multi-core crosses 22,000. That's a 25 percent jump over the M3 Pro.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "stock_with_stat",
+        "title": "Benchmark Numbers",
+        "transition": "fadeblack",
+        "data": {
+          "value": "22,000+",
+          "label": "Multi-Core Geekbench Score",
+          "subtitle": "25% faster than M3 Pro",
+          "keywords": ["benchmark performance graph", "processor chip macro"]
+        }
+      }
+    },
+    {
+      "scene_number": 3,
+      "narration_text": "And of course, Reddit had opinions. One user in the Apple subreddit wrote: Just compiled a full Rust project in 47 seconds. My old Intel Mac took 4 minutes. I'm never going back.",
+      "emotion": "excited",
+      "visual_instruction": {
+        "type": "social_card",
+        "title": "Reddit Reaction",
+        "transition": "dissolve",
+        "data": {
+          "platform": "reddit",
+          "subreddit": "r/apple",
+          "username": "u/rustdev_2026",
+          "post_title": "Just compiled a full Rust project in 47 seconds. My old Intel Mac took 4 minutes.",
+          "body": "I'm never going back. The M4 Pro is genuinely insane for dev work.",
+          "upvotes": 4200,
+          "comments": 891,
+          "keywords": ["dark abstract technology", "code on screen dark"]
+        }
+      }
+    },
+    {
+      "scene_number": 4,
+      "narration_text": "But here's the thing nobody talks about. The real upgrade isn't the CPU. It's the memory bandwidth. 273 gigabytes per second unified memory means your ML models, your video exports, your Docker containers, they all fly.",
+      "emotion": "serious",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Real Upgrade",
+        "transition": "smoothleft",
+        "data": {
+          "heading": "273 GB/s Memory Bandwidth",
+          "body": "Unified memory changes everything for ML, video, and containers.",
+          "keywords": ["data center server lights", "circuit board macro blue"],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 5,
+      "narration_text": "So is the M4 Pro worth it? If you're a developer, a video editor, or anyone pushing real workloads, absolutely. If you're browsing Twitter and writing emails, save your money. Thanks for watching.",
+      "emotion": "calm",
+      "visual_instruction": {
+        "type": "stock_video",
+        "title": "Conclusion",
+        "transition": "fadeblack",
+        "data": {
+          "keywords": ["person working laptop coffee shop", "sunset city skyline timelapse"],
+          "title": "Worth It? You Decide.",
+          "broll_density": "high"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"specId": "ec03-narrative-pacing", "workflowType": "requirements-first", "specType": "feature", "parentSpec": "animation-effects-library", "dependsOn": "effect-catalog-core"}

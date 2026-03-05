@@ -10,20 +10,20 @@ from asset_orchestrator.scene_registry import BaseScene
 
 # -- Colour constants -------------------------------------------------------
 
-BACKGROUND_COLOR = "#333333"
-TEXT_COLOR = "#FFFFFF"
+BACKGROUND_COLOR = "#FFFFFF"
+TEXT_COLOR = "#111827"
 ACCENT_COLORS = [
-    "#4FC3F7",  # light blue
-    "#81C784",  # green
-    "#FFB74D",  # orange
-    "#E57373",  # red
-    "#BA68C8",  # purple
-    "#4DD0E1",  # cyan
-    "#FFD54F",  # amber
-    "#A1887F",  # brown
-    "#90A4AE",  # blue-gray
-    "#F06292",  # pink
-    "#AED581",  # light green
+    "#2563EB",  # deep blue (primary)
+    "#10B981",  # emerald
+    "#F59E0B",  # amber
+    "#EF4444",  # red
+    "#8B5CF6",  # violet
+    "#06B6D4",  # cyan
+    "#F97316",  # orange
+    "#EC4899",  # pink
+    "#6B7280",  # gray
+    "#14B8A6",  # teal
+    "#84CC16",  # lime
 ]
 
 MAX_TITLE_LENGTH = 60

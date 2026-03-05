@@ -1,0 +1,718 @@
+{
+  "title": "ASML: Luck vs. Boring",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "narration_text": "Imagine, if you will, that one single building in the middle of a Dutch field just\u2026 stopped. The world wouldn't just be slightly annoyed; it would end. No new iPhones, no AI, no guided missiles. Nothing. This isn't a Bond villain's plot; it's a company called ASML. And they are the most important people you've never heard of.",
+      "emotion": "dramatic",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The World Stops",
+        "transition": "fadeblack",
+        "data": {
+          "heading": "One Building. One Company.",
+          "body": "If it stops, the world stops with it.",
+          "keywords": [
+            "empty city street cinematic",
+            "Netherlands aerial farmland"
+          ],
+          "position": "center",
+          "broll_density": "high"
+        }
+      }
+    },
+    {
+      "scene_number": 2,
+      "narration_text": "Now, you might have noticed their stock price. In early 2026, it hit fifteen hundred euros. To the casual observer, it looks like a lucky break \u2014 an overnight success. But at 'Luck vs. Boring,' we know that's rubbish. This isn't luck. It's a forty-year, bloody-minded obsession with a very expensive lightbulb.",
+      "emotion": "skeptical",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "ASML Stock \u2014 5 Year Run",
+        "transition": "smoothup",
+        "data": {
+          "chart_type": "timeseries",
+          "ticker": "ASML",
+          "period": "5y",
+          "interval": "1mo",
+          "value_type": "close",
+          "unit": "$",
+          "subtitle": "From underdog to \u20ac1,500 \u2014 forty years in the making",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 3,
+      "narration_text": "But what exactly does ASML do that makes them so irreplaceable? They build the only machines on Earth capable of printing the most advanced microchips. Every cutting-edge processor in your phone, your laptop, and every AI data centre on the planet was made using an ASML machine. No ASML, no chips. No chips, no modern economy. It's that simple.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "stock_video",
+        "title": "The Monopoly on Silicon",
+        "transition": "dissolve",
+        "data": {
+          "keywords": [
+            "robotic arm silicon wafer",
+            "semiconductor production line"
+          ],
+          "title": "Permission to Exist"
+        }
+      }
+    },
+    {
+      "scene_number": 4,
+      "narration_text": "To understand their power, you have to look at the physics \u2014 which is, frankly, mental. They take a tiny drop of molten tin and hit it with a laser fifty thousand times every single second. This creates a plasma forty times hotter than the surface of the sun.",
+      "emotion": "curious",
+      "visual_instruction": {
+        "type": "stock_with_stat",
+        "title": "The Laser Process",
+        "transition": "circleopen",
+        "data": {
+          "value": "50,000",
+          "label": "Laser Pulses Per Second",
+          "subtitle": "A molten tin droplet, vaporized at impossible speed.",
+          "keywords": [
+            "industrial laser pulse beam",
+            "microscopic droplet slow motion"
+          ]
+        }
+      }
+    },
+    {
+      "scene_number": 5,
+      "narration_text": "It's basically a star in a box, just to print a microchip. The plasma reaches two hundred and twenty thousand degrees Celsius \u2014 and only about two percent of that energy actually converts into usable light. The rest is waste heat that has to be managed in real time. The engineering precision here is measured in atoms, not millimetres.",
+      "emotion": "impressed",
+      "visual_instruction": {
+        "type": "stock_with_stat",
+        "title": "A Star in a Box",
+        "transition": "fadeblack",
+        "data": {
+          "value": "220,000\u00b0C",
+          "label": "Plasma Temperature",
+          "subtitle": "40x hotter than the surface of the sun. 2% energy conversion.",
+          "keywords": [
+            "plasma ball energy glow",
+            "solar flare close up"
+          ]
+        }
+      }
+    },
+    {
+      "scene_number": 6,
+      "narration_text": "This isn't just a business; it's a monopoly on the future. Their machines cost three hundred and eighty million dollars each. Intel and Samsung are currently standing in a very expensive queue, waiting for ASML's permission to exist. If you want to build the future, you have to ask these Dutchmen nicely.",
+      "emotion": "humorous",
+      "visual_instruction": {
+        "type": "stock_with_stat",
+        "title": "The $380M Machine",
+        "transition": "smoothleft",
+        "data": {
+          "value": "$380M",
+          "label": "Cost Per High-NA EUV System",
+          "subtitle": "Intel and Samsung are in the queue.",
+          "keywords": [
+            "huge industrial machine assembly",
+            "macro microchip gold"
+          ]
+        }
+      }
+    },
+    {
+      "scene_number": 7,
+      "narration_text": "Let's put that price tag in perspective. At three hundred and eighty million dollars, one ASML machine costs more than a Boeing 787 Dreamliner. More than an F-35 fighter jet. And unlike those, there is no alternative supplier. You either buy from ASML, or you don't make advanced chips. Full stop.",
+      "emotion": "analytical",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "Cost Comparison: ASML vs Everything",
+        "transition": "smoothright",
+        "data": {
+          "chart_type": "horizontal_bar",
+          "labels": [
+            "ASML High-NA EUV",
+            "Boeing 787 Dreamliner",
+            "F-35 Fighter Jet",
+            "Luxury Superyacht (80m)"
+          ],
+          "values": [
+            380000000,
+            300000000,
+            110000000,
+            80000000
+          ],
+          "unit": "$",
+          "y_label": "Cost (USD)",
+          "subtitle": "One lithography machine costs more than a commercial airliner.",
+          "source": "Public filings, industry estimates"
+        }
+      }
+    },
+    {
+      "scene_number": 8,
+      "narration_text": "The customers lining up for these machines read like a who's who of the semiconductor world. TSMC, the world's largest chipmaker, takes the lion's share. Then Intel, Samsung, and SK Hynix. Each one is betting billions on ASML's technology to stay competitive in the AI race.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "ASML's Customer Base (2025)",
+        "transition": "smoothup",
+        "data": {
+          "chart_type": "donut",
+          "labels": [
+            "TSMC",
+            "Intel",
+            "Samsung",
+            "SK Hynix",
+            "Others"
+          ],
+          "values": [
+            38,
+            22,
+            18,
+            12,
+            10
+          ],
+          "center_value": "100%",
+          "center_label": "EUV Market",
+          "subtitle": "Every advanced chipmaker on Earth depends on ASML.",
+          "source": "ASML 2025 Annual Report"
+        }
+      }
+    },
+    {
+      "scene_number": 9,
+      "narration_text": "And the AI boom is only accelerating this demand. Every major tech company \u2014 Microsoft, Google, Meta, Amazon \u2014 is spending tens of billions on new data centres. Every single one of those data centres needs chips. And every single one of those chips needs an ASML machine to exist. The capex cycle is feeding directly into ASML's order book.",
+      "emotion": "excited",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The AI Capex Boom",
+        "transition": "smoothright",
+        "data": {
+          "heading": "AI Capex Explosion",
+          "body": "Every data centre needs chips. Every chip needs ASML.",
+          "keywords": [
+            "data center construction aerial",
+            "server rack installation"
+          ],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 10,
+      "narration_text": "But even a giant has a glass jaw: Geopolitics.",
+      "emotion": "serious",
+      "visual_instruction": {
+        "type": "section_title",
+        "title": "The Glass Jaw",
+        "transition": "fadeblack",
+        "data": {
+          "heading": "The Glass Jaw",
+          "subtitle": "When geopolitics meets a monopoly."
+        }
+      }
+    },
+    {
+      "scene_number": 11,
+      "narration_text": "Back in October 2024, the world realized how fragile this was. In one afternoon, ASML's stock plummeted sixteen percent \u2014 erasing fifty billion euros. The most important company you've never heard of suddenly became front-page news. Why? Because an IT bloke accidentally leaked their report early, and everyone realized China was about to be cut off.",
+      "emotion": "serious",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "The October 2024 Flash Crash",
+        "transition": "smoothdown",
+        "data": {
+          "chart_type": "timeseries",
+          "ticker": "ASML",
+          "period": "6mo",
+          "interval": "1d",
+          "value_type": "close",
+          "unit": "$",
+          "events": [
+            {
+              "date": "2024-10-15",
+              "label": "Earnings Leak"
+            }
+          ],
+          "subtitle": "16% single-day crash \u2014 \u20ac50B erased in hours",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 12,
+      "narration_text": "At that time, China was buying nearly half of everything ASML made. When Washington and Beijing started shouting at each other, ASML got hit in the face. Nearly forty-seven percent of their revenue was coming from a single geopolitical flashpoint. That's not a business risk; that's a ticking time bomb.",
+      "emotion": "serious",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "China's Share of ASML Revenue",
+        "transition": "smoothup",
+        "data": {
+          "chart_type": "donut",
+          "labels": [
+            "China",
+            "Taiwan",
+            "South Korea",
+            "US & Europe",
+            "Other"
+          ],
+          "values": [
+            47,
+            20,
+            15,
+            12,
+            6
+          ],
+          "center_value": "47%",
+          "center_label": "China (Q3 2024)",
+          "subtitle": "Nearly half of all ASML sales went to China before the ban.",
+          "source": "ASML Q3 2024 Report"
+        }
+      }
+    },
+    {
+      "scene_number": 13,
+      "narration_text": "The export restrictions didn't happen overnight. It started quietly in 2019 when the Dutch government delayed an export license for China's SMIC. Then in 2022, the US imposed sweeping chip controls. By January 2024, the Netherlands formally banned EUV exports to China. Each step tightened the noose, and ASML was caught in the middle.",
+      "emotion": "serious",
+      "visual_instruction": {
+        "type": "bullet_reveal",
+        "title": "Export Restriction Timeline",
+        "transition": "smoothright",
+        "data": {
+          "title": "Five Years of Tightening Controls",
+          "bullets": [
+            "2019: Dutch gov delays SMIC export license",
+            "2022: US sweeping chip export controls",
+            "2024: Netherlands bans EUV to China",
+            "2025: Advanced DUV restrictions expand"
+          ]
+        }
+      }
+    },
+    {
+      "scene_number": 14,
+      "narration_text": "To the 'lucky' investor, an absolute disaster. To the 'boring' investor, a once-in-a-decade discount on a monopoly.",
+      "emotion": "thoughtful",
+      "visual_instruction": {
+        "type": "fullscreen_statement",
+        "title": "Luck vs Boring",
+        "transition": "dissolve",
+        "data": {
+          "statement": "A disaster for the lucky. A discount for the boring."
+        }
+      }
+    },
+    {
+      "scene_number": 15,
+      "narration_text": "Because the boring investor asks one simple question: does the underlying technology monopoly change because of a political headline? And the answer, every single time, is no. The physics doesn't care about politics. The monopoly doesn't care about headlines.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Boring Question",
+        "transition": "smoothright",
+        "data": {
+          "heading": "Does the Monopoly Change?",
+          "body": "Political headlines come and go. Physics doesn't.",
+          "keywords": [
+            "calm investor looking at charts",
+            "stock market green recovery"
+          ],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 16,
+      "narration_text": "And look what happened next. By 2025, they hit record sales of nearly thirty-three billion euros. Turns out, the world needs AI more than it needs political posturing. The revenue didn't just recover; it went into orbit. Despite losing nearly half their China business, global AI demand more than filled the gap.",
+      "emotion": "excited",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "ASML Annual Revenue Growth",
+        "transition": "smoothup",
+        "data": {
+          "chart_type": "bar",
+          "labels": [
+            "2020",
+            "2021",
+            "2022",
+            "2023",
+            "2024",
+            "2025"
+          ],
+          "values": [
+            14000000000,
+            18600000000,
+            21200000000,
+            27550000000,
+            28263000000,
+            33000000000
+          ],
+          "unit": "$",
+          "y_label": "Net Sales (EUR)",
+          "subtitle": "Record \u20ac33B in 2025 \u2014 AI demand overwhelmed the China ban",
+          "source": "ASML Annual Reports"
+        }
+      }
+    },
+    {
+      "scene_number": 17,
+      "narration_text": "The stock told the same story. After the October crash, it didn't just bounce back \u2014 it climbed right back and then some. The boring investors who bought the dip were rewarded handsomely. The market remembered what matters: ASML has no competition, and AI isn't slowing down.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "ASML Post-Crash Recovery",
+        "transition": "smoothright",
+        "data": {
+          "chart_type": "timeseries",
+          "ticker": "ASML",
+          "period": "1y",
+          "interval": "1wk",
+          "value_type": "close",
+          "unit": "$",
+          "events": [
+            {
+              "date": "2024-10-15",
+              "label": "Flash Crash"
+            }
+          ],
+          "subtitle": "The boring investor's reward: buying a monopoly on sale",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 18,
+      "narration_text": "When your backlog is forty billion euros, short-term news is just\u2026 noise. That backlog is the real story. ASML's production is completely sold out through 2027. Customers are queuing years in advance for machines that haven't even been built yet.",
+      "emotion": "analytical",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "The \u20ac40B Order Backlog",
+        "transition": "circleopen",
+        "data": {
+          "chart_type": "donut",
+          "labels": [
+            "Logic Orders",
+            "Memory Orders"
+          ],
+          "values": [
+            26000,
+            14000
+          ],
+          "center_value": "\u20ac40B",
+          "center_label": "Order Backlog",
+          "subtitle": "Sold out through 2027 \u2014 years of guaranteed revenue.",
+          "source": "ASML Q4 2025 Financials"
+        }
+      }
+    },
+    {
+      "scene_number": 19,
+      "narration_text": "But why are they so dominant? Simple. Persistence.",
+      "emotion": "thoughtful",
+      "visual_instruction": {
+        "type": "section_title",
+        "title": "The Persistence Factor",
+        "transition": "fadeblack",
+        "data": {
+          "heading": "Why So Dominant?",
+          "subtitle": "Simple. Persistence."
+        }
+      }
+    },
+    {
+      "scene_number": 20,
+      "narration_text": "In 1984, they started in a leaky shed behind a Philips factory with a hundred people and no money. By 1988, they were nearly bankrupt. Most companies would have folded. Most investors would have walked away. But ASML stuck to their guns and kept going.",
+      "emotion": "thoughtful",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Leaky Shed",
+        "transition": "revealleft",
+        "data": {
+          "heading": "From Leaky Shed to Monopoly",
+          "body": "1984: 100 people. 1988: nearly bankrupt. 2025: unstoppable.",
+          "keywords": [
+            "old industrial building rain",
+            "vintage laboratory equipment"
+          ],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 21,
+      "narration_text": "They stuck to their guns for thirty years while giants like Canon and Nikon eventually just\u2026 gave up. Because they were bored. Canon retreated to older, cheaper nodes. Nikon invested heavily in their own EUV research but the technical gaps were too wide. By 2020, Nikon's semiconductor lithography revenue had collapsed. ASML wasn't bored. ASML was obsessed.",
+      "emotion": "serious",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Canon & Nikon Give Up",
+        "transition": "smoothleft",
+        "data": {
+          "heading": "The Competition Quit",
+          "body": "Canon retreated. Nikon collapsed. ASML was obsessed.",
+          "keywords": [
+            "abandoned factory industrial",
+            "empty office building"
+          ],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 22,
+      "narration_text": "Canon and Nikon bet on older lithography technology \u2014 deep ultraviolet light at 193 nanometres. It worked brilliantly for a while, but it hit a physics wall below seven nanometres. ASML pushed through to extreme ultraviolet at 13.5 nanometres. The others gave up. ASML didn't. That's the difference between luck and boring.",
+      "emotion": "analytical",
+      "visual_instruction": {
+        "type": "comparison",
+        "title": "Persistence vs. Giving Up",
+        "transition": "wipeleft",
+        "data": {
+          "left_title": "ASML (Persistence)",
+          "right_title": "Canon & Nikon (Gave Up)",
+          "left_items": [
+            "30-year EUV R&D cycle",
+            "Survived near-bankruptcy",
+            "100% EUV monopoly today",
+            "\u20ac40B backlog"
+          ],
+          "right_items": [
+            "Stuck with 193nm DUV",
+            "Retreated from cutting edge",
+            "Fighting over scraps",
+            "Revenue collapsed"
+          ]
+        }
+      }
+    },
+    {
+      "scene_number": 23,
+      "narration_text": "The stock performance tells the whole story. While ASML has been on a relentless climb over the past five years, Nikon's semiconductor business has flatlined. This is what happens when persistence meets physics. The boring company wins. Every single time.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "ASML vs Nikon \u2014 5 Year Performance",
+        "transition": "smoothleft",
+        "data": {
+          "chart_type": "timeseries",
+          "tickers": [
+            "ASML",
+            "NINOY"
+          ],
+          "period": "5y",
+          "interval": "1mo",
+          "value_type": "pct_change",
+          "subtitle": "Persistence vs. giving up \u2014 reflected in stock performance",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 24,
+      "narration_text": "Today, ASML controls one hundred percent of the EUV market and over eighty percent of all advanced lithography. Nikon and Canon are left fighting over the remaining scraps of older DUV systems. The race is over. ASML won it by refusing to quit when everyone else decided the physics was simply impossible.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "Lithography Market Share (2025)",
+        "transition": "circleopen",
+        "data": {
+          "chart_type": "donut",
+          "labels": [
+            "ASML",
+            "Nikon",
+            "Canon"
+          ],
+          "values": [
+            82,
+            10,
+            8
+          ],
+          "center_value": "82%",
+          "center_label": "ASML",
+          "subtitle": "100% of EUV, 82% of total advanced lithography.",
+          "source": "VLSI Research 2025"
+        }
+      }
+    },
+    {
+      "scene_number": 25,
+      "narration_text": "So, here's the verdict. ASML is at its peak, and it's priced for perfection. With a P/E ratio over fifty, it trades at nearly double the semiconductor equipment peer average. But here's the thing: none of those peers have a monopoly. None of them have a forty-billion-euro backlog. And none of them are irreplaceable.",
+      "emotion": "analytical",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "P/E Ratio: ASML vs Peers",
+        "transition": "smoothup",
+        "data": {
+          "chart_type": "horizontal_bar",
+          "labels": [
+            "ASML",
+            "Tokyo Electron",
+            "KLA Corp",
+            "Lam Research",
+            "Applied Materials"
+          ],
+          "values": [
+            52,
+            32,
+            28,
+            24,
+            22
+          ],
+          "subtitle": "ASML trades at nearly 2x the peer average P/E.",
+          "source": "Yahoo Finance, Mar 2026"
+        }
+      }
+    },
+    {
+      "scene_number": 26,
+      "narration_text": "Let's see how ASML stacks up against those peers in the market over the past year. The semiconductor equipment sector has had a very strong run, but ASML's monopoly position gives it a different risk profile entirely. When you're the only game in town, the rules are different.",
+      "emotion": "analytical",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "ASML vs Semi Equipment Peers \u2014 1Y",
+        "transition": "smoothright",
+        "data": {
+          "chart_type": "timeseries",
+          "tickers": [
+            "ASML",
+            "KLAC",
+            "LRCX",
+            "AMAT"
+          ],
+          "period": "1y",
+          "interval": "1wk",
+          "value_type": "pct_change",
+          "subtitle": "ASML vs KLA, Lam Research, Applied Materials \u2014 1 year",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 27,
+      "narration_text": "And when you look at revenue growth, the gap becomes even clearer. ASML grew over fifteen percent in 2025 while most peers grew in the single digits. The AI capex cycle is funnelling billions directly into ASML's order book, and that trend shows no signs of slowing down.",
+      "emotion": "excited",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "2025 Revenue Growth: ASML vs Peers",
+        "transition": "circleopen",
+        "data": {
+          "chart_type": "bar",
+          "labels": [
+            "ASML",
+            "Tokyo Electron",
+            "KLA Corp",
+            "Lam Research",
+            "Applied Materials"
+          ],
+          "values": [
+            15.6,
+            11.3,
+            8.2,
+            6.9,
+            5.4
+          ],
+          "y_label": "YoY Revenue Growth %",
+          "subtitle": "AI capex cycle drives ASML's outperformance.",
+          "source": "Company Filings, FY 2025"
+        }
+      }
+    },
+    {
+      "scene_number": 28,
+      "narration_text": "The premium is steep, but the fundamentals are unlike anything else in the semiconductor supply chain. There is no second source. There is no alternative. And the demand curve for advanced chips is only going up. When every major industry depends on your machines, the moat isn't just wide. It's uncrossable.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Uncrossable Moat",
+        "transition": "dissolve",
+        "data": {
+          "heading": "No Second Source",
+          "body": "AI, autonomous vehicles, quantum \u2014 all need ASML.",
+          "keywords": [
+            "autonomous vehicle sensor close up",
+            "quantum computing lab"
+          ],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 29,
+      "narration_text": "So what's the play? If you're the 'lucky' type, you'll chase the next hot tip and hope for the best. But if you're the 'boring' type, you'll do what boring investors do: you'll wait for the next political headline to knock the price down, and you'll buy the most important company on Earth at a discount. Again.",
+      "emotion": "thoughtful",
+      "visual_instruction": {
+        "type": "stock_video",
+        "title": "The Boring Investor's Play",
+        "transition": "wiperight",
+        "data": {
+          "keywords": [
+            "calm investor looking at charts",
+            "notebook pen close up"
+          ],
+          "title": "The Boring Investor's Playbook"
+        }
+      }
+    },
+    {
+      "scene_number": 30,
+      "narration_text": "But habit beats luck every single time. This company must stay on your watchlist. If the value slips again because of a political headline \u2014 just like it did in October 2024 \u2014 that is your moment to buy into the tracks of the digital age.",
+      "emotion": "thoughtful",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "The Watchlist Call",
+        "transition": "fadeblack",
+        "data": {
+          "heading": "Habit Beats Luck",
+          "body": "Political dips are buying opportunities for the boring investor.",
+          "keywords": [
+            "watching charts on laptop",
+            "stock market green recovery"
+          ],
+          "position": "center"
+        }
+      }
+    },
+    {
+      "scene_number": 31,
+      "narration_text": "In the Angstrom Era, they don't just participate in the market \u2014 they ARE the market. Every advanced chip, every AI model, every smartphone processor traces back to one building in Veldhoven, in the south of the Netherlands. There is no workaround. There is no plan B. There never was.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "stock_video",
+        "title": "They ARE the Market",
+        "transition": "smoothup",
+        "data": {
+          "keywords": [
+            "data center server rack lights",
+            "circuit board macro green"
+          ],
+          "title": "The Starting Line, the Track, the Finish Line"
+        }
+      }
+    },
+    {
+      "scene_number": 32,
+      "narration_text": "Success isn't a matter of luck. It is the inevitable result of forty years of being exceptionally, relentlessly, boringly boring.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "fullscreen_statement",
+        "title": "Final Verdict",
+        "transition": "fadeblack",
+        "data": {
+          "statement": "Forty years of being exceptionally boring."
+        }
+      }
+    },
+    {
+      "scene_number": 33,
+      "narration_text": "And on that bombshell, it is time to go. Thanks for watching Luck vs. Boring. We'll see you in the next one.",
+      "emotion": "humorous",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Outro",
+        "transition": "fade",
+        "data": {
+          "heading": "Luck vs. Boring",
+          "body": "See you in the next one.",
+          "keywords": [
+            "sunset city skyline cinematic",
+            "Netherlands aerial canal"
+          ],
+          "position": "center"
+        }
+      }
+    }
+  ]
+}

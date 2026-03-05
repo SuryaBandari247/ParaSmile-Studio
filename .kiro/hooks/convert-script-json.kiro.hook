@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Convert Script to JSON",
+  "description": "When a .txt script is created in scripts/input/, convert it to a video_script JSON using the steering guide.",
+  "version": "1.0.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "scripts/input/*.txt"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new script file was just created in scripts/input/. Convert it into a video_script JSON.\n\nFollow the #script-to-json steering guide exactly:\n1. Read the new .txt file from scripts/input/\n2. Read the schema from output/video_script_schema.json\n3. Read output/asml_script.json as a reference example\n4. Split narration into 20-60 word scenes, preserving the author's voice\n5. Assign visual types per the guide (stock_with_text, data_chart, stock_with_stat, etc.)\n6. Craft cinematic Pexels keywords per the keyword strategy in the guide\n7. Add data_chart scenes where numbers/financials/trends are mentioned\n8. Write output to output/<filename>_video_script.json\n9. Move the .txt to scripts/input/done/"
+  }
+}

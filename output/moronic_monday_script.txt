@@ -1,0 +1,39 @@
+Video Title: The Internet's Most "Stupid" Day
+
+Hook: (0:00-0:07)
+Visual: Text on screen: "Am I the only one who doesn't get this?"
+Audio: "Have you ever wanted to ask a question so basic you were afraid the internet would actually set you on fire for asking it? Well, there's a holiday for that. It's called Moronic Monday."
+
+The Breakdown (0:07-0:30)
+The Concept:
+Visual: Quick screenshots of the February 23, 2026, threads from r/finance, r/fitness, and r/guns.
+Audio: "Every Monday, thousands of people flock to 'Moronic Monday' threads. The rule? No question is too dumb. It's the one place on the web where 'Just Google it' is a banned response."
+
+The Trending "Moronic" Questions (Feb 23 Edition):
+Finance: "Wait, is $100k actually a lot of money in 2026, or am I just middle class now?"
+Fitness: "I did one light workout—did I lose all my gains from the last three years?"
+Tech: "Is my AI chatbot actually judging me, or am I just paranoid?"
+
+The "Why It Matters" (0:30-0:50)
+Audio: "Here's the reality: Most of us are faking it. On February 23rd, the finance threads were full of people who realized their tax withholding was wrong all year because of a single checkbox. These aren't 'morons'—they're people who decided that being slightly embarrassed for 5 minutes is better than being broke for 5 years."
+
+The Call to Action (0:50-1:00)
+Visual: Text overlay: YOUR TURN.
+Audio: "So, let's normalize it. What's the 'moronic' question you've been too scared to ask about your money, your job, or your life? Drop it below. I'll answer the best ones tomorrow. No judgment—just answers."
+
+Deep Dive: The Tax Trap
+"I'm married filing jointly. We both work and checked the boxes, but we still owe $10,000 this year."
+Reality: The 2(c) checkbox on the W-4 form is notoriously glitchy.
+Advice: Use the IRS Tax Withholding Estimator every quarter.
+
+Deep Dive: Solo 401(k) Time Machine
+"Is it too late to contribute to my retirement for the 2025 tax year?"
+Reality: You can contribute to a Solo 401(k) or SEP IRA for 2025 until April 15, 2026.
+
+Deep Dive: Mortgage Points
+"My lender is asking if I want to 'buy down' my rate. Is that a scam?"
+Reality: With rates around 6%, buying points to 5.75% takes about 4 years to break even.
+
+Deep Dive: Is Ethereum Dead?
+"ETH fees are down 95% from 2021 peaks. Does this mean nobody is using it?"
+Reality: People moved to Layer 2s (Arbitrum, Optimism, Polygon). Mainnet is becoming a settlement layer.

@@ -1,0 +1,135 @@
+{
+  "title": "NVIDIA vs AMD: The GPU Revenue War (2024)",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "narration_text": "NVIDIA and AMD have been battling for GPU dominance for decades. But in 2024, the revenue gap tells a very different story than the spec sheets.",
+      "emotion": "curious",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Hook",
+        "transition": "fade",
+        "data": {
+          "heading": "NVIDIA vs AMD: The Revenue War",
+          "body": "Who's really winning in 2024?",
+          "keywords": ["gpu graphics card close up", "technology circuit board"],
+          "position": "center",
+          "broll_density": "high"
+        }
+      }
+    },
+    {
+      "scene_number": 2,
+      "narration_text": "Let's start with the raw revenue numbers. NVIDIA pulled in 60.9 billion dollars in fiscal 2024, while AMD came in at 22.7 billion. Intel's GPU division barely registered at 1.5 billion.",
+      "emotion": "confident",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "GPU Company Revenue (FY 2024)",
+        "transition": "smoothleft",
+        "data": {
+          "chart_type": "bar",
+          "labels": ["NVIDIA", "AMD", "Intel GPU"],
+          "values": [60900000000, 22700000000, 1500000000],
+          "unit": "$",
+          "y_label": "Revenue (USD)",
+          "subtitle": "Fiscal Year 2024 — Total Company Revenue",
+          "source": "SEC Filings"
+        }
+      }
+    },
+    {
+      "scene_number": 3,
+      "narration_text": "But the real story is the stock performance. Look at how NVIDIA has absolutely crushed it over the past two years compared to AMD and Intel.",
+      "emotion": "excited",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "NVDA vs AMD vs INTC — 2Y Stock Performance",
+        "transition": "smoothright",
+        "data": {
+          "chart_type": "timeseries",
+          "tickers": ["NVDA", "AMD", "INTC"],
+          "period": "2y",
+          "interval": "1wk",
+          "value_type": "pct_change",
+          "subtitle": "Percentage change over 2 years — NVIDIA's AI-driven surge",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 4,
+      "narration_text": "Zooming into just NVIDIA's stock price over the past year, you can see the relentless climb driven by AI demand and data center revenue.",
+      "emotion": "analytical",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "NVIDIA Stock Price (1Y)",
+        "transition": "fade",
+        "data": {
+          "chart_type": "timeseries",
+          "ticker": "NVDA",
+          "period": "1y",
+          "interval": "1wk",
+          "value_type": "close",
+          "unit": "$",
+          "subtitle": "NVDA closing price — trailing 12 months",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 5,
+      "narration_text": "Where is all this NVIDIA money coming from? Data center revenue now makes up 78 percent of their total. Gaming, which used to be their bread and butter, is down to just 17 percent.",
+      "emotion": "surprised",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "NVIDIA Revenue Breakdown (2024)",
+        "transition": "circleopen",
+        "data": {
+          "chart_type": "donut",
+          "labels": ["Data Center", "Gaming", "Professional Viz", "Automotive", "OEM & Other"],
+          "values": [47525, 10447, 1553, 1091, 306],
+          "center_value": "$60.9B",
+          "center_label": "Total Revenue",
+          "subtitle": "Data Center dominance: 78% of total revenue",
+          "source": "NVIDIA FY2024 10-K"
+        }
+      }
+    },
+    {
+      "scene_number": 6,
+      "narration_text": "And the semiconductor sector as a whole has been on a tear. Let's compare the big players — NVIDIA, AMD, Broadcom, and Qualcomm over the past year.",
+      "emotion": "impressed",
+      "visual_instruction": {
+        "type": "data_chart",
+        "title": "Semiconductor Giants — 1Y Performance",
+        "transition": "wipeleft",
+        "data": {
+          "chart_type": "timeseries",
+          "tickers": ["NVDA", "AMD", "AVGO", "QCOM"],
+          "period": "1y",
+          "interval": "1wk",
+          "value_type": "pct_change",
+          "subtitle": "Who's leading the semiconductor rally?",
+          "source": "Yahoo Finance"
+        }
+      }
+    },
+    {
+      "scene_number": 7,
+      "narration_text": "The bottom line? NVIDIA isn't just winning the GPU war. They've redefined what a GPU company even is. AMD is solid, but the AI wave has turned this into a completely different race.",
+      "emotion": "thoughtful",
+      "visual_instruction": {
+        "type": "stock_with_text",
+        "title": "Conclusion",
+        "transition": "fade",
+        "data": {
+          "heading": "NVIDIA Redefined the Game",
+          "body": "AI turned a GPU company into a $3T titan",
+          "keywords": ["futuristic data center", "server room blue lights"],
+          "position": "center",
+          "broll_density": "low"
+        }
+      }
+    }
+  ]
+}

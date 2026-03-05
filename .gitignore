@@ -1,16 +1,17 @@
-# Python virtual environment
+# ── Secrets & Environment ──
+.env
+.env.local
+.env.*.local
+
+# ── Python ──
 venv/
 .venv/
 env/
 ENV/
-
-# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -28,56 +29,61 @@ wheels/
 .installed.cfg
 *.egg
 
-# Testing
+# ── Testing ──
 .pytest_cache/
+.hypothesis/
 .coverage
 htmlcov/
 .tox/
-.hypothesis/
 
-# Environment variables (contains API keys)
-.env
-.env.local
+# ── Databases (generated at runtime) ──
+.data/
+*.db
+*.db-shm
+*.db-wal
 
-# Cache directories
+# ── Generated output (audio, video, renders, caches) ──
+output/audio/
+output/charts/
+output/composed_stock/
+output/emotion_test/
+output/final/
+output/pixabay_cache/
+output/renders/
+output/stock_cache/
+output/test_render*/
+output/wikimedia_cache/
+output/*.mp3
+output/*.wav
+output/*.mp4
+output/concat_list.txt
+output/audio_manifest.json
+output/raw_script.txt
+
+# ── Reference voice files (user-specific, large) ──
+output/ref_voice*.wav
+output/ref_candidate_*.wav
+output/ElevenLabs_*.mp3
+
+# ── Cache directories ──
 .cache/
 
-# IDE
+# ── Frontend ──
+frontend/node_modules/
+frontend/dist/
+
+# ── IDE / Editor ──
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# macOS
+# ── macOS ──
 .DS_Store
 
-# Logs
+# ── Logs ──
 *.log
 
-# ── Project-specific ──────────────────────────────
-
-# Generated output (renders, audio, charts, stock cache, reference voices)
-output/
-
-# SQLite databases
-.data/
-*.db
-*.db-shm
-*.db-wal
-
-# Generated media files (safety net — in case they land outside output/)
-*.mp4
-*.mp3
-*.wav
-*.webm
-*.mkv
-
-# Generated research data
+# ── Trending topics (generated) ──
 trending_topics.json
-
-# Node modules (frontend)
-frontend/node_modules/
-
-# Kiro local state
-.kiro/
