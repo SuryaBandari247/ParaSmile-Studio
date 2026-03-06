@@ -116,13 +116,40 @@ def main():
     else:
         print(f"  ✓ {len(values)} live data points from Yahoo Finance")
 
+    # ── Trim data to ~90 bars around the crash for readable candles ──
+    # Too many bars = paper-thin candles. Target: 40 bars before, 50 after.
+    shock_date = "2024-10-15"
+    shock_i = None
+    for i, d in enumerate(dates):
+        if d == shock_date or d.startswith(shock_date):
+            shock_i = i
+            break
+    if shock_i is None:
+        shock_i = len(dates) // 2
+
+    max_bars = int(os.getenv("SHOCK_MAX_BARS", "90"))
+    bars_before = max_bars * 4 // 9   # ~40
+    bars_after = max_bars - bars_before  # ~50
+    start_i = max(0, shock_i - bars_before)
+    end_i = min(len(dates), shock_i + bars_after)
+    if end_i - start_i > max_bars:
+        end_i = start_i + max_bars
+
+    dates = dates[start_i:end_i]
+    values = values[start_i:end_i]
+    print(f"  ✓ Windowed to {len(dates)} bars (idx {start_i}–{end_i})")
+
     # Step 2: Build liquidity_shock instruction
-    print("\n[2/3] Generating Manim code via liquidity_shock template...")
+    print("\n[2/3] Building instruction...")
 
     shock_date = "2024-10-15"
     shock_label = "Earnings Leak — 16% Crash"
     subtitle = vi["data"].get("subtitle", "16% single-day crash — €50B erased in hours")
     source = vi["data"].get("source", "Yahoo Finance")
+
+    # Variant: "simple" (white bg, line chart) or "terminal" (dark, candlesticks)
+    variant = os.getenv("SHOCK_VARIANT", "simple").lower()
+    print(f"  Variant: {variant}")
 
     liquidity_instruction = {
         "type": "liquidity_shock",
@@ -137,64 +164,79 @@ def main():
             "subtitle": subtitle,
             "source": source,
             "unit": "$",
+            "variant": variant,
         },
     }
 
-    from effects_catalog.templates.liquidity_shock import generate
-    manim_code = generate(liquidity_instruction)
-
-    # Write to temp file
     output_dir = os.path.abspath("output/renders")
     os.makedirs(output_dir, exist_ok=True)
+    output_filename = f"asml_liquidity_shock_{variant}.mp4"
+    rendered_path = os.path.join(output_dir, output_filename)
 
-    tmp = tempfile.NamedTemporaryFile(
-        suffix=".py", prefix="asml_liquidity_shock_",
-        delete=False, mode="w", dir=output_dir,
-    )
-    tmp.write(manim_code)
-    tmp.flush()
-    tmp.close()
-    print(f"  ✓ Generated {len(manim_code)} chars of Manim code")
-    print(f"  ✓ Temp file: {tmp.name}")
+    if variant == "terminal":
+        # ── Terminal: Puppeteer + Lightweight Charts pipeline ──
+        print("\n[3/3] Rendering via Puppeteer + TradingView Lightweight Charts...")
+        from effects_catalog.templates.liquidity_shock_terminal import render as tv_render
+        try:
+            rendered_path = tv_render(liquidity_instruction, rendered_path)
+            print(f"  ✓ Puppeteer render complete")
+        except Exception as e:
+            print(f"  ✗ Puppeteer render failed: {e}")
+            return
+    else:
+        # ── Simple: Manim pipeline ──
+        from effects_catalog.templates.liquidity_shock import generate
+        manim_code = generate(liquidity_instruction)
 
-    # Step 3: Render with Manim
-    print("\n[3/3] Rendering with Manim (medium quality)...")
-    output_filename = "asml_liquidity_shock_v13.mp4"
+        tmp = tempfile.NamedTemporaryFile(
+            suffix=".py", prefix="asml_liquidity_shock_",
+            delete=False, mode="w", dir=output_dir,
+        )
+        tmp.write(manim_code)
+        tmp.flush()
+        tmp.close()
+        print(f"  ✓ Generated {len(manim_code)} chars of Manim code")
+        print(f"  ✓ Temp file: {tmp.name}")
 
-    cmd = [
-        "manim", "render",
-        "-qm",           # medium quality (720p) for speed
-        "--fps", "30",
-        "-o", output_filename,
-        "--media_dir", output_dir,
-        tmp.name,
-        "LiquidityShockScene",
-    ]
+        print("\n[3/3] Rendering with Manim (medium quality)...")
+        scene_class = "LiquidityShockSimpleScene"
+        cmd = [
+            "manim", "render",
+            "-qm", "--fps", "30",
+            "-o", output_filename,
+            "--media_dir", output_dir,
+            tmp.name,
+            scene_class,
+        ]
+        print(f"  Running: manim render -qm --fps 30 ...")
 
-    print(f"  Running: manim render -qm --fps 30 ...")
-
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
-
-        if result.returncode != 0:
-            print(f"  ✗ Manim render failed:")
-            print(f"    stderr: {result.stderr[-800:]}")
-            print(f"  ℹ Temp file kept for debugging: {tmp.name}")
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+            if result.returncode != 0:
+                print(f"  ✗ Manim render failed:")
+                print(f"    stderr: {result.stderr[-800:]}")
+                print(f"  ℹ Temp file kept for debugging: {tmp.name}")
+                return
+            print(f"  ✓ Manim render complete")
+        except subprocess.TimeoutExpired:
+            print("  ✗ Manim render timed out (180s)")
             return
 
-        print(f"  ✓ Manim render complete")
-    except subprocess.TimeoutExpired:
-        print("  ✗ Manim render timed out (180s)")
-        return
+        # Find the rendered file (Manim puts it in a subdirectory)
+        found = None
+        for dirpath, _, filenames in os.walk(output_dir):
+            if output_filename in filenames:
+                found = os.path.join(dirpath, output_filename)
+                break
+        if found:
+            rendered_path = found
 
-    # Find the rendered file
-    rendered_path = None
-    for dirpath, _, filenames in os.walk(output_dir):
-        if output_filename in filenames:
-            rendered_path = os.path.join(dirpath, output_filename)
-            break
+        if os.path.exists(tmp.name):
+            os.unlink(tmp.name)
+            print(f"  ✓ Cleaned up temp file")
 
-    if rendered_path:
+    # ── Report result ──
+    if os.path.exists(rendered_path):
         size_mb = os.path.getsize(rendered_path) / (1024 * 1024)
         print(f"\n{'=' * 60}")
         print(f"✅ Rendered: {rendered_path}")
@@ -219,15 +261,10 @@ def main():
         except Exception:
             pass
     else:
-        print(f"\n✗ Could not find {output_filename} in {output_dir}")
+        print(f"\n✗ Could not find rendered file at {rendered_path}")
         for dirpath, _, files in os.walk(output_dir):
             for f in files[-5:]:
                 print(f"  Found: {os.path.join(dirpath, f)}")
-
-    # Clean up temp file
-    if os.path.exists(tmp.name):
-        os.unlink(tmp.name)
-        print(f"  ✓ Cleaned up temp file")
 
 
 if __name__ == "__main__":

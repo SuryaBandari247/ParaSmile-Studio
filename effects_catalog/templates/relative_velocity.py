@@ -85,7 +85,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             series_b_name = sb.get("name", series_b_name)
 
         if len(values_a) < 2 or len(values_b) < 2:
-            err = Text("Insufficient data for comparison", font=FONT, font_size=28, color="#EF4444")
+            err = Text("Insufficient data for comparison", font=FONT, font_size=28, color="#EF5350")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -102,13 +102,13 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, n - 1, max(1, n // 6)],
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=11, y_length=5.5,
-            axis_config={{"color": "#9CA3AF", "stroke_width": 1.5}},
+            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#111827", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -117,8 +117,8 @@ class {SCENE_CLASS}(MovingCameraScene):
         self.play(Create(axes), run_time=0.4)
 
         # Draw both lines
-        color_a = "#2563EB"
-        color_b = "#EF4444"
+        color_a = "#2962FF"
+        color_b = "#EF5350"
 
         pts_a = [axes.c2p(i, v) for i, v in enumerate(values_a)]
         pts_b = [axes.c2p(i, v) for i, v in enumerate(values_b)]

@@ -750,12 +750,44 @@
     "identifier": "liquidity_shock",
     "display_name": "Liquidity Shock",
     "category": "narrative",
-    "description": "Vertical flash line at shock date with ripple shockwave ring, camera micro-shake, and brief price-line glow to viscerally convey crashes or black swan events.",
+    "description": "Dispatcher — routes to simple (white bg, line chart) or terminal (dark, candlestick) variant based on data.variant field. Defaults to simple.",
     "parameter_schema": {
       "type": "object",
       "properties": {
         "shock_date": { "type": "string", "format": "date", "description": "ISO date of the shock event" },
         "shock_color": { "type": "string", "default": "#FF453A" },
+        "shock_intensity": { "type": "number", "default": 0.7, "minimum": 0, "maximum": 1, "description": "Camera shake magnitude 0-1" },
+        "shock_label": { "type": "string", "description": "Text label displayed near the flash line" },
+        "variant": { "type": "string", "enum": ["simple", "terminal"], "default": "simple", "description": "Visual variant: simple (white line chart) or terminal (TradingView candlestick)" }
+      },
+      "required": ["shock_date"]
+    },
+    "preview_config": {
+      "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01", "2024-06-01"],
+      "values": [100, 105, 110, 85, 80, 90],
+      "shock_date": "2024-04-01",
+      "shock_label": "Flash Crash",
+      "variant": "simple"
+    },
+    "reference_video_path": "assets/liquidity_shock.mp4",
+    "template_module": "templates.liquidity_shock",
+    "sync_points": ["line_draw", "shock_flash", "ripple_expand", "label_reveal"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "liquidity_shock_simple",
+    "display_name": "Liquidity Shock (Simple)",
+    "category": "narrative",
+    "description": "White-background editorial line chart with vertical flash line, camera shake, shock dot, and narrative ending. Clean and fast — ideal for quick explainers.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "shock_date": { "type": "string", "format": "date", "description": "ISO date of the shock event" },
+        "shock_color": { "type": "string", "default": "#EF4444" },
         "shock_intensity": { "type": "number", "default": 0.7, "minimum": 0, "maximum": 1, "description": "Camera shake magnitude 0-1" },
         "shock_label": { "type": "string", "description": "Text label displayed near the flash line" }
       },
@@ -767,9 +799,44 @@
       "shock_date": "2024-04-01",
       "shock_label": "Flash Crash"
     },
-    "reference_video_path": "assets/liquidity_shock.mp4",
-    "template_module": "templates.liquidity_shock",
-    "sync_points": ["line_draw", "shock_flash", "ripple_expand", "label_reveal"],
+    "reference_video_path": "assets/liquidity_shock_simple.mp4",
+    "template_module": "templates.liquidity_shock_simple",
+    "sync_points": ["line_draw", "shock_flash", "label_reveal"],
+    "quality_profiles": {
+      "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
+      "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }
+    },
+    "initial_wait": 1.5
+  },
+  {
+    "identifier": "liquidity_shock_terminal",
+    "display_name": "Liquidity Shock (Terminal)",
+    "category": "narrative",
+    "description": "TradingView dark-theme candlestick chart with volume bars, SMA 9/20, Bollinger Bands, OHLC header, and shock event animation. Full terminal look for deep-dive analysis.",
+    "parameter_schema": {
+      "type": "object",
+      "properties": {
+        "shock_date": { "type": "string", "format": "date", "description": "ISO date of the shock event" },
+        "shock_color": { "type": "string", "default": "#EF5350" },
+        "shock_intensity": { "type": "number", "default": 0.7, "minimum": 0, "maximum": 1, "description": "Camera shake magnitude 0-1" },
+        "shock_label": { "type": "string", "description": "Text label displayed near the flash line" },
+        "ticker": { "type": "string", "default": "ASML", "description": "Ticker symbol for OHLC header" },
+        "exchange": { "type": "string", "default": "NasdaqGS", "description": "Exchange name for header" },
+        "interval_label": { "type": "string", "default": "1D", "description": "Interval label for header" }
+      },
+      "required": ["shock_date"]
+    },
+    "preview_config": {
+      "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01", "2024-06-01"],
+      "values": [100, 105, 110, 85, 80, 90],
+      "shock_date": "2024-04-01",
+      "shock_label": "Flash Crash",
+      "ticker": "ASML",
+      "exchange": "NasdaqGS"
+    },
+    "reference_video_path": "assets/liquidity_shock_terminal.mp4",
+    "template_module": "templates.liquidity_shock_terminal",
+    "sync_points": ["candle_reveal", "shock_flash", "camera_shake", "label_reveal"],
     "quality_profiles": {
       "draft": { "resolution": "720p", "fps": 15, "manim_quality": "-ql", "encoder": "libx264" },
       "production": { "resolution": "1080p", "fps": 30, "manim_quality": "-qh", "encoder": "h264_videotoolbox" }

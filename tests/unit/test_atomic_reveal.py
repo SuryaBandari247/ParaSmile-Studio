@@ -56,13 +56,13 @@ class TestComponentNotFoundError:
 
 class TestSentimentColors:
     def test_positive_is_green(self):
-        assert SENTIMENT_COLORS["positive"] == "#10B981"
+        assert SENTIMENT_COLORS["positive"] == "#26A69A"
 
     def test_negative_is_red(self):
-        assert SENTIMENT_COLORS["negative"] == "#EF4444"
+        assert SENTIMENT_COLORS["negative"] == "#EF5350"
 
     def test_neutral_is_grey(self):
-        assert SENTIMENT_COLORS["neutral"] == "#6B7280"
+        assert SENTIMENT_COLORS["neutral"] == "#787B86"
 
 
 class TestGenerate:
@@ -93,8 +93,8 @@ class TestGenerate:
 
     def test_sentiment_colors_in_output(self):
         code = generate(self._make_instruction())
-        assert "#10B981" in code  # positive
-        assert "#EF4444" in code  # negative
+        assert "#26A69A" in code  # positive
+        assert "#EF5350" in code  # negative
 
     def test_highlight_indicate(self):
         code = generate(self._make_instruction())

@@ -52,14 +52,14 @@ class {SCENE_CLASS}(Scene):
         title = {json.dumps(title)}
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#111827", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
             self.play(FadeIn(title_mob), run_time=0.3)
 
         if not flows:
-            err = Text("No flows to display", font=FONT, font_size=28, color="#EF4444")
+            err = Text("No flows to display", font=FONT, font_size=28, color="#EF5350")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -94,10 +94,10 @@ class {SCENE_CLASS}(Scene):
         for e in entities:
             box = RoundedRectangle(
                 width=2, height=0.8, corner_radius=0.1,
-                color="#2563EB", fill_color="#F9FAFB", fill_opacity=0.9,
+                color="#2962FF", fill_color="#F9FAFB", fill_opacity=0.9,
                 stroke_width=1.5,
             )
-            label = Text(e, font=FONT, font_size=18, color="#111827")
+            label = Text(e, font=FONT, font_size=18, color="#191919")
             label.move_to(box)
             group = VGroup(box, label)
             group.move_to(positions[e])

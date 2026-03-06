@@ -73,7 +73,7 @@ class {SCENE_CLASS}(MovingCameraScene):
         title = {json.dumps(title)}
 
         if rate <= 0 or years < 2:
-            err = Text("Invalid parameters", font=FONT, font_size=28, color="#EF4444")
+            err = Text("Invalid parameters", font=FONT, font_size=28, color="#EF5350")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -96,16 +96,16 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, years, max(1, years // 5)],
             y_range=[0, y_max, y_max / 5],
             x_length=11, y_length=5.5,
-            axis_config={{"color": "#9CA3AF", "stroke_width": 1.5}},
+            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
-        x_label = Text("Years", font=FONT, font_size=16, color="#6B7280")
+        x_label = Text("Years", font=FONT, font_size=16, color="#787B86")
         x_label.next_to(axes.x_axis, DOWN, buff=0.15)
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#111827", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -150,9 +150,9 @@ class {SCENE_CLASS}(MovingCameraScene):
                 if v >= target:
                     marker = DashedLine(
                         axes.c2p(y, 0), axes.c2p(y, v),
-                        color="#6B7280", stroke_width=0.8, dash_length=0.1,
+                        color="#787B86", stroke_width=0.8, dash_length=0.1,
                     )
-                    label = Text(f"2x", font=FONT, font_size=14, color="#6B7280")
+                    label = Text(f"2x", font=FONT, font_size=14, color="#787B86")
                     label.next_to(axes.c2p(y, 0), DOWN, buff=0.1)
                     self.play(Create(marker), FadeIn(label), run_time=0.2)
                     target *= 2

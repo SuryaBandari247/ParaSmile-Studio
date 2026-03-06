@@ -27,9 +27,9 @@ class ComponentNotFoundError(Exception):
 
 
 SENTIMENT_COLORS = {
-    "positive": "#10B981",
-    "negative": "#EF4444",
-    "neutral": "#6B7280",
+    "positive": "#26A69A",
+    "negative": "#EF5350",
+    "neutral": "#787B86",
 }
 
 
@@ -83,13 +83,13 @@ class {SCENE_CLASS}(Scene):
         title = {json.dumps(title)}
 
         sentiment_colors = {{
-            "positive": "#10B981",
-            "negative": "#EF4444",
-            "neutral": "#6B7280",
+            "positive": "#26A69A",
+            "negative": "#EF5350",
+            "neutral": "#787B86",
         }}
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#111827", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -98,10 +98,10 @@ class {SCENE_CLASS}(Scene):
         # Central entity block
         entity_box = RoundedRectangle(
             width=3, height=1.2, corner_radius=0.15,
-            color="#2563EB", fill_color="#F9FAFB", fill_opacity=0.9,
+            color="#2962FF", fill_color="#F9FAFB", fill_opacity=0.9,
             stroke_width=2,
         )
-        entity_label = Text(entity_name, font=FONT, font_size=44, color="#111827", weight=BOLD)
+        entity_label = Text(entity_name, font=FONT, font_size=44, color="#191919", weight=BOLD)
         entity_label.move_to(entity_box)
         entity_group = VGroup(entity_box, entity_label)
         entity_group.move_to(ORIGIN)
@@ -141,14 +141,14 @@ class {SCENE_CLASS}(Scene):
             name = comp.get("name", f"Component {{i}}")
             value = comp.get("value", "")
             sentiment = comp.get("sentiment", "neutral")
-            color = sentiment_colors.get(sentiment, "#6B7280")
+            color = sentiment_colors.get(sentiment, "#787B86")
 
             box = RoundedRectangle(
                 width=2.2, height=0.9, corner_radius=0.1,
                 color=color, fill_color="#F9FAFB", fill_opacity=0.85,
                 stroke_width=1.5,
             )
-            name_text = Text(name, font=FONT, font_size=18, color="#111827")
+            name_text = Text(name, font=FONT, font_size=18, color="#191919")
             name_text.move_to(box.get_center() + UP * 0.12)
             val_text = Text(str(value), font_size=11, color=color)
             val_text.move_to(box.get_center() + DOWN * 0.18)

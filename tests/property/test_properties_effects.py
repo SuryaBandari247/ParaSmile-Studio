@@ -574,11 +574,11 @@ def test_sentiment_color_mapping(sentiment):
     """SENTIMENT_COLORS maps positive→green, negative→red, neutral→grey."""
     color = SENTIMENT_COLORS[sentiment]
     if sentiment == "positive":
-        assert color == "#10B981"
+        assert color == "#26A69A"
     elif sentiment == "negative":
-        assert color == "#EF4444"
+        assert color == "#EF5350"
     else:
-        assert color == "#6B7280"
+        assert color == "#787B86"
 
 
 # ── Property 20: Component layout positioning ───────────────

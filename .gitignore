@@ -45,6 +45,8 @@ htmlcov/
 # ── Generated output (audio, video, renders, caches) ──
 output/audio/
 output/charts/
+output/chart_frames/
+output/chart_frames_test/
 output/composed_stock/
 output/emotion_test/
 output/final/
@@ -56,6 +58,7 @@ output/wikimedia_cache/
 output/*.mp3
 output/*.wav
 output/*.mp4
+output/*.png
 output/concat_list.txt
 output/audio_manifest.json
 output/raw_script.txt
@@ -68,8 +71,10 @@ output/ElevenLabs_*.mp3
 # ── Cache directories ──
 .cache/
 
+# ── Node.js ──
+node_modules/
+
 # ── Frontend ──
-frontend/node_modules/
 frontend/dist/
 
 # ── IDE / Editor ──

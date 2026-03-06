@@ -66,7 +66,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             values = [p.get("value", p.get("close", 0)) for p in pts]
 
         if len(values) < 2:
-            err = Text("Insufficient data", font=FONT, font_size=28, color="#EF4444")
+            err = Text("Insufficient data", font=FONT, font_size=28, color="#EF5350")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -79,13 +79,13 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, n - 1, max(1, n // 6)],
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=12, y_length=5.5,
-            axis_config={{"color": "#9CA3AF", "stroke_width": 1.5}},
+            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#111827", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -97,7 +97,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             r_start = regime.get("start", "")
             r_end = regime.get("end", "")
             r_label = regime.get("label", "")
-            r_color = regime.get("color", "#6B7280")
+            r_color = regime.get("color", "#787B86")
 
             start_idx = 0
             end_idx = n - 1
@@ -132,12 +132,12 @@ class {SCENE_CLASS}(MovingCameraScene):
 
         # Draw price line on top
         points = [axes.c2p(i, v) for i, v in enumerate(values)]
-        line = VMobject(color="#2563EB", stroke_width=6)
+        line = VMobject(color="#2962FF", stroke_width=6)
         line.set_points_smoothly(points)
         self.play(Create(line), run_time=1.5)
 
         # End badge
-        badge = Text(f"${{values[-1]:,.0f}}", font=FONT, font_size=18, color="#111827")
+        badge = Text(f"${{values[-1]:,.0f}}", font=FONT, font_size=18, color="#191919")
         badge.next_to(axes.c2p(n - 1, values[-1]), RIGHT, buff=0.15)
         self.play(FadeIn(badge), run_time=0.3)
 

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #131722; overflow: hidden; }
+  #chart { width: 1920px; height: 1080px; }
+  #header {
+    position: absolute; top: 12px; left: 16px; z-index: 10;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #B2B5BE; font-size: 14px;
+  }
+  #header .ticker { color: #D1D4DC; font-weight: 600; font-size: 15px; }
+  #header .ohlc { margin-top: 2px; font-size: 13px; }
+  #header .indicator { color: #787B86; font-size: 12px; margin-top: 2px; }
+  #shock-flash {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(239, 83, 80, 0); z-index: 20;
+    pointer-events: none; transition: background 0.05s;
+  }
+  #annotation {
+    position: absolute; z-index: 15;
+    font-family: 'Inter', -apple-system, sans-serif;
+    display: none; padding: 6px 12px;
+    border-top: 2px solid #FF9800; border-bottom: 2px solid #FF9800;
+  }
+  #annotation .label { color: #FF9800; font-size: 15px; font-weight: 600; }
+  #annotation .sub { color: #B2B5BE; font-size: 13px; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="header">
+  <span class="ticker" id="h-ticker"></span>
+  <span id="h-meta"></span>
+  <div class="ohlc" id="h-ohlc"></div>
+  <div class="indicator" id="h-ind">SMA 9 &nbsp; SMA 20 &nbsp; BB 20,2</div>
+</div>
+<div id="chart"></div>
+<div id="shock-flash"></div>
+<div id="annotation">
+  <div class="label" id="ann-label"></div>
+  <div class="sub" id="ann-sub"></div>
+</div>
+
+<script src="./lightweight-charts.standalone.production.js"></script>
+<script>
+// Data injected by Puppeteer via page.evaluate
+window.CHART_DATA = null;
+window.CHART_READY = false;
+
+window.initChart = function(config) {
+  const { ohlc, volumes, sma9, sma20, bbUpper, bbLower,
+          ticker, exchange, interval, shockIdx, shockLabel, shockSub,
+          animDelayMs } = config;
+
+  // Header
+  document.getElementById('h-ticker').textContent = `${ticker} · ${interval} · ${exchange}`;
+
+  const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+    width: 1920, height: 1080,
+    layout: {
+      background: { type: 'solid', color: '#131722' },
+      textColor: '#D1D4DC',
+      fontFamily: 'Inter, -apple-system, sans-serif',
+      fontSize: 13,
+    },
+    grid: {
+      vertLines: { color: '#2B2B43', style: 0 },
+      horzLines: { color: '#2B2B43', style: 0 },
+    },
+    crosshair: { mode: 0 },
+    rightPriceScale: {
+      borderColor: '#363A45',
+      scaleMargins: { top: 0.1, bottom: 0.25 },
+    },
+    timeScale: {
+      borderColor: '#363A45',
+      timeVisible: false,
+      secondsVisible: false,
+    },
+  });
+
+  // Candlestick series
+  const candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
+    upColor: '#26A69A', downColor: '#EF5350',
+    borderUpColor: '#26A69A', borderDownColor: '#EF5350',
+    wickUpColor: '#26A69A', wickDownColor: '#EF5350',
+  });
+
+  // Volume series
+  const volumeSeries = chart.addSeries(LightweightCharts.HistogramSeries, {
+    priceFormat: { type: 'volume' },
+    priceScaleId: 'volume',
+  });
+  chart.priceScale('volume').applyOptions({
+    scaleMargins: { top: 0.8, bottom: 0 },
+  });
+
+  // SMA 9 (orange)
+  const sma9Series = chart.addSeries(LightweightCharts.LineSeries, {
+    color: '#FF9800', lineWidth: 1, crosshairMarkerVisible: false,
+    priceLineVisible: false, lastValueVisible: false,
+  });
+
+  // SMA 20 (blue)
+  const sma20Series = chart.addSeries(LightweightCharts.LineSeries, {
+    color: '#2962FF', lineWidth: 1, crosshairMarkerVisible: false,
+    priceLineVisible: false, lastValueVisible: false,
+  });
+
+  // BB upper
+  const bbUpSeries = chart.addSeries(LightweightCharts.LineSeries, {
+    color: 'rgba(41, 98, 255, 0.4)', lineWidth: 1, crosshairMarkerVisible: false,
+    priceLineVisible: false, lastValueVisible: false,
+  });
+
+  // BB lower
+  const bbLowSeries = chart.addSeries(LightweightCharts.LineSeries, {
+    color: 'rgba(41, 98, 255, 0.4)', lineWidth: 1, crosshairMarkerVisible: false,
+    priceLineVisible: false, lastValueVisible: false,
+  });
+
+  // Progressive animation: add data points one by one
+  let idx = 0;
+  const total = ohlc.length;
+
+  function addNext() {
+    if (idx >= total) {
+      window.CHART_READY = true;
+      return;
+    }
+
+    const bar = ohlc[idx];
+    candleSeries.update(bar);
+
+    const vol = volumes[idx];
+    if (vol) volumeSeries.update(vol);
+
+    if (sma9[idx] && sma9[idx].value !== null) sma9Series.update(sma9[idx]);
+    if (sma20[idx] && sma20[idx].value !== null) sma20Series.update(sma20[idx]);
+    if (bbUpper[idx] && bbUpper[idx].value !== null) bbUpSeries.update(bbUpper[idx]);
+    if (bbLower[idx] && bbLower[idx].value !== null) bbLowSeries.update(bbLower[idx]);
+
+    // Update OHLC header
+    const chg = idx > 0 ? (bar.close - ohlc[idx-1].close) : 0;
+    const chgPct = idx > 0 ? (chg / ohlc[idx-1].close * 100) : 0;
+    const sign = chg >= 0 ? '+' : '';
+    const color = chg >= 0 ? '#26A69A' : '#EF5350';
+    document.getElementById('h-ohlc').innerHTML =
+      `<span style="color:${color}">O ${bar.open.toFixed(2)} &nbsp; H ${bar.high.toFixed(2)} &nbsp; L ${bar.low.toFixed(2)} &nbsp; C ${bar.close.toFixed(2)} &nbsp; ${sign}${chg.toFixed(2)} (${sign}${chgPct.toFixed(2)}%)</span>`;
+
+    // Shock effect at shock index
+    if (idx === shockIdx) {
+      // Red flash
+      const flash = document.getElementById('shock-flash');
+      flash.style.background = 'rgba(239, 83, 80, 0.25)';
+      setTimeout(() => { flash.style.background = 'rgba(239, 83, 80, 0)'; }, 200);
+
+      // Add marker
+      candleSeries.setMarkers([{
+        time: bar.time,
+        position: 'aboveBar',
+        color: '#FF9800',
+        shape: 'arrowDown',
+        text: '',
+      }]);
+
+      // Show annotation
+      if (shockLabel) {
+        const ann = document.getElementById('annotation');
+        document.getElementById('ann-label').textContent = shockLabel;
+        if (shockSub) document.getElementById('ann-sub').textContent = shockSub;
+        ann.style.display = 'block';
+        // Position near center-right of chart
+        ann.style.top = '45%';
+        ann.style.left = '55%';
+      }
+    }
+
+    // Auto-scroll to keep latest visible
+    chart.timeScale().scrollToPosition(2, false);
+
+    idx++;
+    window._animFrame = idx;
+    setTimeout(addNext, animDelayMs);
+  }
+
+  // Start animation
+  window._animFrame = 0;
+  addNext();
+};
+</script>
+</body>
+</html>

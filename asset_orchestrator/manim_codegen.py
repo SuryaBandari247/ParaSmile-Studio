@@ -12,16 +12,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 BACKGROUND_COLOR = "#FFFFFF"
-TEXT_COLOR = "#111827"
+TEXT_COLOR = "#191919"
 
 # ── Documentary palette (Calm Capitalist house style) ──
 # Deep blue primary, gray hierarchy, emerald/red accents.
 # Defined in effects_catalog/palette.py — duplicated here for codegen.
 ACCENT_COLORS = [
-    "#2563EB",  # deep blue (primary)
-    "#10B981",  # emerald
+    "#2962FF",  # deep blue (primary)
+    "#26A69A",  # emerald
     "#F59E0B",  # amber
-    "#EF4444",  # red
+    "#EF5350",  # red
     "#8B5CF6",  # violet
     "#06B6D4",  # cyan
     "#F97316",  # orange

@@ -197,7 +197,7 @@ class {SCENE_CLASS}(MovingCameraScene):
         # Convert PDF page to image using pdftoppm (poppler)
         img_path = self._pdf_to_image(pdf_path, page_number)
         if img_path is None:
-            error = Text("PDF conversion failed", font=FONT, font_size=28, color="#EF4444")
+            error = Text("PDF conversion failed", font=FONT, font_size=28, color="#EF5350")
             self.play(FadeIn(error))
             self.wait(3)
             return
@@ -208,7 +208,7 @@ class {SCENE_CLASS}(MovingCameraScene):
         page_img.move_to(ORIGIN)
 
         if title:
-            title_text = Text(title, font=FONT, font_size=44, color="#111827", weight=BOLD)
+            title_text = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
             title_text.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_text.width > 12:
                 title_text.scale_to_fit_width(12)
