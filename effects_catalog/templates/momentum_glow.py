@@ -55,7 +55,7 @@ class {SCENE_CLASS}(MovingCameraScene):
     """Timeseries with momentum-based glow intensity."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
 
         momentum_window = {json.dumps(momentum_window)}
         glow_color_up = {json.dumps(glow_color_up)}
@@ -74,7 +74,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             values = [p.get("value", p.get("close", 0)) for p in pts]
 
         if len(values) < 2:
-            err = Text("Insufficient data", font=FONT, font_size=28, color="#EF5350")
+            err = Text("Insufficient data", font=FONT, font_size=28, color="#EF4444")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -87,13 +87,13 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, n - 1, max(1, n // 6)],
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=12, y_length=5.5,
-            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
+            axis_config={{"color": "#334155", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#F8FAFC", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -127,7 +127,7 @@ class {SCENE_CLASS}(MovingCameraScene):
         self.play(LaggedStart(*[Create(s) for s in segments], lag_ratio=0.02), run_time=2.0)
 
         # End badge
-        badge = Text(f"${{values[-1]:,.0f}}", font=FONT, font_size=18, color="#191919")
+        badge = Text(f"${{values[-1]:,.0f}}", font=FONT, font_size=18, color="#F8FAFC")
         badge.next_to(axes.c2p(n - 1, values[-1]), RIGHT, buff=0.15)
         self.play(FadeIn(badge), run_time=0.3)
 

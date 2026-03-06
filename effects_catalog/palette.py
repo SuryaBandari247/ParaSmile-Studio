@@ -1,10 +1,7 @@
 """Documentary palette — shared visual constants for all effect templates.
 
-Based on TradingView Lightweight Charts dark theme color system.
-Source: https://tradingview.github.io/lightweight-charts/docs/api/
-
-Calm Capitalist house style: dark background (#131722), TradingView blue primary,
-Inter font, editorial layout. Designed for YouTube 1080p readability.
+D3 narrative chart style — Slate-900 dark editorial background with
+TradingView signature blue primary line. Designed for YouTube 1080p readability.
 
 Change colors/sizes here and every effect template picks them up.
 """
@@ -13,16 +10,16 @@ Change colors/sizes here and every effect template picks them up.
 FONT = "Inter"
 
 # ── Background ──
-BG = "#131722"          # TradingView dark theme background
+BG = "#0F172A"          # Slate-900 dark editorial background
 
 # ── Text hierarchy ──
-TXT_PRI = "#D1D4DC"     # title — TradingView dark theme textColor
-TXT_SEC = "#B2B5BE"     # subtitle — lighter muted
-TXT_MUT = "#787B86"     # axis labels — TradingView scale text muted
+TXT_PRI = "#F8FAFC"     # title — bright white
+TXT_SEC = "#94A3B8"     # subtitle — slate-400
+TXT_MUT = "#64748B"     # axis labels, source — slate-500
 
 # ── Axes & grid ──
-AX_COL = "#363A45"      # axis lines — TradingView dark scale line
-GRD_COL = "#2B2B43"     # grid lines — TradingView dark separator
+AX_COL = "#334155"      # axis lines — slate-700
+GRD_COL = "#1E293B"     # grid lines — slate-800
 GRD_OPACITY = 0.6
 
 # ── Primary line ──
@@ -30,16 +27,16 @@ LINE_COL = "#2962FF"    # TradingView signature blue
 LINE_WIDTH = 6
 
 # ── Accents (use sparingly) ──
-ACCENT_POS = "#26A69A"  # TradingView candle up — teal
-ACCENT_NEG = "#EF5350"  # TradingView candle down — red
+ACCENT_POS = "#10B981"  # emerald-500 (up/positive)
+ACCENT_NEG = "#EF4444"  # red-500 (down/negative)
 
 # ── Area fill ──
 AREA_TOP = "#2962FF"    # area gradient top (use with ~0.28 opacity)
 AREA_BOT = "#2962FF"    # area gradient bottom (use with ~0.00 opacity)
 
 # ── Shock / event markers ──
-SMK_TEXT = "#FF9800"     # shock marker text — amber (pops on dark bg)
-SMK_BORDER = "#FF9800"  # shock marker border — amber
+SMK_TEXT = "#EF4444"     # red for shock labels
+SMK_BORDER = "#EF4444"  # red border
 
 # ── Font sizes (YouTube-optimized) ──
 FS_TITLE = 44
@@ -71,7 +68,7 @@ SERIES_COLORS = [
 def manim_palette_block() -> str:
     """Return a block of Python code that injects palette constants into a Manim scene."""
     return f'''
-        # ── TradingView dark palette (auto-injected) ──
+        # ── D3 narrative dark palette (auto-injected) ──
         FONT = "{FONT}"
         BG = "{BG}"
         TP = "{TXT_PRI}"

@@ -65,7 +65,7 @@ class {SCENE_CLASS}(Scene):
     """Spider/radar chart comparing two companies."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
 
         company_a_name = {json.dumps(company_a_name)}
         company_b_name = {json.dumps(company_b_name)}
@@ -78,13 +78,13 @@ class {SCENE_CLASS}(Scene):
 
         n = len(metric_labels)
         if n < 3:
-            err = Text("Need at least 3 metrics for radar", font=FONT, font_size=28, color="#EF5350")
+            err = Text("Need at least 3 metrics for radar", font=FONT, font_size=28, color="#EF4444")
             self.play(FadeIn(err))
             self.wait(3)
             return
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#F8FAFC", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -99,10 +99,10 @@ class {SCENE_CLASS}(Scene):
         for i in range(n):
             angle = PI / 2 + i * TAU / n
             end_point = center + radius * np.array([np.cos(angle), np.sin(angle), 0])
-            axis = Line(center, end_point, color="#9598A1", stroke_width=1)
+            axis = Line(center, end_point, color="#334155", stroke_width=1)
             axes_group.add(axis)
 
-            label = Text(metric_labels[i], font=FONT, font_size=16, color="#787B86")
+            label = Text(metric_labels[i], font=FONT, font_size=16, color="#64748B")
             label_dir = np.array([np.cos(angle), np.sin(angle), 0])
             label.move_to(center + (radius + 0.4) * label_dir)
             label_group.add(label)
@@ -114,7 +114,7 @@ class {SCENE_CLASS}(Scene):
             for i in range(n + 1):
                 angle = PI / 2 + i * TAU / n
                 ring_pts.append(center + radius * r_frac * np.array([np.cos(angle), np.sin(angle), 0]))
-            ring = VMobject(color="#D6DCDE", stroke_width=0.5)
+            ring = VMobject(color="#1E293B", stroke_width=0.5)
             ring.set_points_as_corners(ring_pts)
             rings.add(ring)
 

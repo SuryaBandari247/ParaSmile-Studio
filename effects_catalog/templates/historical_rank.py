@@ -54,7 +54,7 @@ class {SCENE_CLASS}(Scene):
     """Vertical percentile ladder with animated marker."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
 
         current_value = {json.dumps(current_value)}
         historical_values = {json.dumps(historical_values)}
@@ -63,13 +63,13 @@ class {SCENE_CLASS}(Scene):
         title = {json.dumps(title)}
 
         if len(historical_values) < 10:
-            err = Text("Insufficient historical data", font=FONT, font_size=28, color="#EF5350")
+            err = Text("Insufficient historical data", font=FONT, font_size=28, color="#EF4444")
             self.play(FadeIn(err))
             self.wait(3)
             return
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#F8FAFC", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -86,11 +86,11 @@ class {SCENE_CLASS}(Scene):
         ladder_top = ladder_bottom + UP * ladder_height
 
         # Main vertical bar
-        bar = Line(ladder_bottom, ladder_top, color="#9598A1", stroke_width=3)
+        bar = Line(ladder_bottom, ladder_top, color="#334155", stroke_width=3)
         self.play(Create(bar), run_time=0.4)
 
         # Percentile bands
-        band_colors = ["#26A69A", "#2962FF", "#f0883e", "#EF5350"]
+        band_colors = ["#10B981", "#2962FF", "#f0883e", "#EF4444"]
         prev_pct = 0
         for i, band in enumerate(percentile_bands):
             pct = band.get("pct", 50)
@@ -110,7 +110,7 @@ class {SCENE_CLASS}(Scene):
             label = Text(label_text, font=FONT, font_size=14, color=color)
             label.next_to(zone, RIGHT, buff=0.2)
 
-            pct_label = Text(f"{{pct}}th", font=FONT, font_size=14, color="#787B86")
+            pct_label = Text(f"{{pct}}th", font=FONT, font_size=14, color="#64748B")
             pct_label.move_to([ladder_x - 0.5, y_end[1], 0])
 
             self.play(FadeIn(zone), FadeIn(label), FadeIn(pct_label), run_time=0.2)

@@ -52,16 +52,16 @@ def generate(instruction: dict) -> str:  # noqa: C901
     unit = data.get("unit", "$")
 
     # Documentary palette
-    line_color = data.get("line_color", "#2563EB")
+    line_color = data.get("line_color", "#2962FF")
     accent_pos = "#10B981"
     accent_neg = "#EF4444"
-    smk_text = "#C2410C"
-    smk_border = "#F97316"
-    txt_pri = "#111827"
-    txt_sec = "#374151"
-    txt_mut = "#6B7280"
-    ax_col = "#9CA3AF"
-    grd_col = "#E5E7EB"
+    smk_text = "#EF4444"
+    smk_border = "#EF4444"
+    txt_pri = "#F8FAFC"
+    txt_sec = "#94A3B8"
+    txt_mut = "#64748B"
+    ax_col = "#334155"
+    grd_col = "#1E293B"
 
     _caption = shock_caption if shock_caption else subtitle
 
@@ -77,7 +77,7 @@ class {SCENE_CLASS}(MovingCameraScene):
     """Editorial-layout timeseries with vertical energy pulse at event date."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
         self.camera.frame.save_state()
 
         shock_date = {J(shock_date)}

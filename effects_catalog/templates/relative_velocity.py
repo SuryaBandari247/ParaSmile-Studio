@@ -36,7 +36,7 @@ def generate(instruction: dict) -> str:
     series_b_name = data.get("series_b_name", "Series B")
     show_delta_arrow = data.get("show_delta_arrow", True)
     delta_format = data.get("delta_format", "+{:.0f}% Lead")
-    arrow_color = data.get("arrow_color", "#FFFFFF")
+    arrow_color = data.get("arrow_color", "#F8FAFC")
     title = instruction.get("title", "")
 
     series = data.get("series", [])
@@ -53,7 +53,7 @@ class {SCENE_CLASS}(MovingCameraScene):
     """Dual timeseries with dynamic delta arrow."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
 
         series_a_name = {json.dumps(series_a_name)}
         series_b_name = {json.dumps(series_b_name)}
@@ -85,7 +85,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             series_b_name = sb.get("name", series_b_name)
 
         if len(values_a) < 2 or len(values_b) < 2:
-            err = Text("Insufficient data for comparison", font=FONT, font_size=28, color="#EF5350")
+            err = Text("Insufficient data for comparison", font=FONT, font_size=28, color="#EF4444")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -102,13 +102,13 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, n - 1, max(1, n // 6)],
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=11, y_length=5.5,
-            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
+            axis_config={{"color": "#334155", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#F8FAFC", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -118,7 +118,7 @@ class {SCENE_CLASS}(MovingCameraScene):
 
         # Draw both lines
         color_a = "#2962FF"
-        color_b = "#EF5350"
+        color_b = "#EF4444"
 
         pts_a = [axes.c2p(i, v) for i, v in enumerate(values_a)]
         pts_b = [axes.c2p(i, v) for i, v in enumerate(values_b)]

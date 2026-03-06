@@ -74,7 +74,7 @@ class {SCENE_CLASS}(MovingCameraScene):
     """Timeseries with forensic camera dive into a focus date."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
         self.camera.frame.save_state()
 
         focus_date = {json.dumps(focus_date)}
@@ -96,7 +96,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             values = [p.get("value", p.get("close", 0)) for p in s.get("data", s.get("points", []))]
 
         if len(dates) < 2 or len(values) < 2:
-            err = Text("Insufficient data for forensic zoom", font=FONT, font_size=28, color="#EF5350")
+            err = Text("Insufficient data for forensic zoom", font=FONT, font_size=28, color="#EF4444")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -110,14 +110,14 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, n - 1, max(1, n // 6)],
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=12, y_length=5.5,
-            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
+            axis_config={{"color": "#334155", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
         # Title
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#F8FAFC", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -155,7 +155,7 @@ class {SCENE_CLASS}(MovingCameraScene):
         # Fade non-focus regions
         left_cover = Rectangle(
             width=abs(axes.c2p(focus_start, 0)[0] - axes.get_left()[0]) + 0.5,
-            height=6.5, color="#FFFFFF", fill_opacity=1 - blur_opacity,
+            height=6.5, color="#0F172A", fill_opacity=1 - blur_opacity,
             stroke_width=0,
         )
         left_cover.move_to([
@@ -165,7 +165,7 @@ class {SCENE_CLASS}(MovingCameraScene):
 
         right_cover = Rectangle(
             width=abs(axes.get_right()[0] - axes.c2p(focus_end, 0)[0]) + 0.5,
-            height=6.5, color="#FFFFFF", fill_opacity=1 - blur_opacity,
+            height=6.5, color="#0F172A", fill_opacity=1 - blur_opacity,
             stroke_width=0,
         )
         right_cover.move_to([

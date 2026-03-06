@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 /**
- * Record a TradingView Lightweight Charts animation as video frames.
+ * Record a cinematic D3.js narrative chart as video frames.
  *
- * Narrative flow (mirrors the simple Manim version):
- *   1. Load ALL data at once → show full chart
- *   2. Hold so viewer reads the chart
- *   3. Smooth zoom into the crash region
- *   4. Red flash + shock annotation
- *   5. Hold on zoomed crash
- *   6. Zoom back out to full chart
- *   7. Final hold, done
+ * Flow:
+ *   1. Title on dark background, axes visible
+ *   2. Blue line draws progressively (entire chart, all blue)
+ *   3. Brief hold — viewer reads the full chart
+ *   4. Crash segment transforms: blue → red line + red gradient fill
+ *   5. Red flash + shock annotation, hold
+ *   6. End-of-line value badge, final hold
  *
  * Usage:
  *   node chart_renderer/record_chart.js <data.json> <output_dir> [fps]
@@ -31,18 +30,43 @@ async function main() {
 
   const config = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
   const totalBars = config.ohlc.length;
+  const shockIdx = config.shockIdx;
+  const closes = config.ohlc.map(b => b.close);
 
-  // Timing (in frames)
-  const fullHoldFrames   = fps * 2;     // 2s — viewer reads full chart
-  const zoomInFrames     = fps * 1;     // 1s — smooth zoom into crash
-  const flashFrames      = 4;           // quick red flash
-  const shockHoldFrames  = Math.round(fps * 2.5); // 2.5s — hold on crash
-  const zoomOutFrames    = Math.round(fps * 0.8); // 0.8s — zoom back out
-  const endHoldFrames    = fps * 2;     // 2s — final hold
+  // Find crash segment boundaries
+  let troughIdx = shockIdx;
+  for (let i = shockIdx; i < Math.min(shockIdx + 12, totalBars); i++) {
+    if (closes[i] <= closes[troughIdx]) troughIdx = i;
+  }
+  if (troughIdx === shockIdx) troughIdx = Math.min(shockIdx + 1, totalBars - 1);
+
+  let maxDrop = 0;
+  for (let i = Math.max(1, shockIdx - 5); i <= shockIdx; i++) {
+    const drop = closes[i - 1] - closes[i];
+    if (drop > maxDrop) maxDrop = drop;
+  }
+  const steepThresh = maxDrop * 0.35;
+  let cliffStart = shockIdx;
+  for (let i = shockIdx; i > Math.max(0, shockIdx - 6); i--) {
+    const drop = i > 0 ? closes[i - 1] - closes[i] : 0;
+    if (drop >= steepThresh) cliffStart = i;
+    else break;
+  }
+  const peakIdx = Math.max(0, cliffStart - 1);
+
+  console.log(`Crash segment: bars ${peakIdx}–${troughIdx} (of ${totalBars})`);
+
+  // ── Pacing (slower) ──
+  const barsPerFrame = 2;                              // 2 bars per frame = steady pace
+  const titleHoldFrames    = Math.round(fps * 1.2);    // 1.2s title
+  const chartHoldFrames    = Math.round(fps * 1.5);    // 1.5s hold on complete blue chart
+  const colorTransFrames   = Math.round(fps * 0.6);    // 0.6s blue→red transition
+  const flashFrames        = 5;                         // red flash
+  const shockHoldFrames    = Math.round(fps * 2.5);    // 2.5s hold on crash
+  const endHoldFrames      = Math.round(fps * 2.5);    // 2.5s final hold
 
   fs.mkdirSync(outputDir, { recursive: true });
-
-  console.log(`Recording ${totalBars} bars @ ${fps}fps (narrative zoom mode)`);
+  console.log(`Recording ${totalBars} bars @ ${fps}fps (D3 narrative)`);
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -53,267 +77,334 @@ async function main() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
 
-  const htmlPath = path.resolve(__dirname, 'tv_chart.html');
+  const htmlPath = path.resolve(__dirname, 'narrative_chart.html');
   await page.goto(`file://${htmlPath}`, { waitUntil: 'domcontentloaded' });
 
-  // ══ PHASE 0: Load ALL data at once ══
-  await page.evaluate((cfg) => {
-    const { ticker, exchange, interval, ohlc, volumes,
-            sma9, sma20, bbUpper, bbLower } = cfg;
+  // ══ PHASE 0: Set up D3 chart — axes, grid, gradients ══
+  await page.evaluate((cfg, peakI, troughI) => {
+    const closes = cfg.ohlc.map(b => b.close);
+    const dates = cfg.ohlc.map(b => b.time);
+    const n = closes.length;
 
-    document.getElementById('h-ticker').textContent =
-      `${ticker} · ${interval} · ${exchange}`;
+    // Title
+    document.getElementById('t-title').textContent = cfg.title || cfg.ticker;
+    document.getElementById('t-subtitle').textContent = cfg.subtitle || '';
+    if (cfg.source) {
+      const s = document.getElementById('source');
+      s.textContent = `Source: ${cfg.source}`;
+      s.style.display = 'block';
+    }
 
-    const chart = LightweightCharts.createChart(
-      document.getElementById('chart'), {
-        width: 1920, height: 1080,
-        layout: {
-          background: { type: 'solid', color: '#131722' },
-          textColor: '#D1D4DC',
-          fontFamily: 'Inter, -apple-system, sans-serif',
-          fontSize: 13,
-        },
-        grid: {
-          vertLines: { color: '#2B2B43', style: 0 },
-          horzLines: { color: '#2B2B43', style: 0 },
-        },
-        crosshair: { mode: 0 },
-        rightPriceScale: {
-          borderColor: '#363A45',
-          scaleMargins: { top: 0.08, bottom: 0.22 },
-          autoScale: true,
-        },
-        timeScale: {
-          borderColor: '#363A45',
-          timeVisible: false,
-          rightOffset: 3,
-          barSpacing: 12,
-        },
-      }
-    );
+    // Dimensions
+    const margin = { top: 140, right: 120, bottom: 80, left: 90 };
+    const width = 1920 - margin.left - margin.right;
+    const height = 1080 - margin.top - margin.bottom;
 
-    // Candlestick — load all data
-    const candleSeries = chart.addSeries(
-      LightweightCharts.CandlestickSeries, {
-        upColor: '#26A69A', downColor: '#EF5350',
-        borderUpColor: '#26A69A', borderDownColor: '#EF5350',
-        wickUpColor: '#26A69A', wickDownColor: '#EF5350',
-      }
-    );
-    candleSeries.setData(ohlc);
+    const svg = d3.select('#chart');
+    const g = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Volume — load all
-    const volumeSeries = chart.addSeries(
-      LightweightCharts.HistogramSeries, {
-        priceFormat: { type: 'volume' },
-        priceScaleId: 'volume',
-      }
-    );
-    chart.priceScale('volume').applyOptions({
-      scaleMargins: { top: 0.82, bottom: 0 },
+    // Scales
+    const yMin = d3.min(closes) * 0.95;
+    const yMax = d3.max(closes) * 1.05;
+    const x = d3.scaleLinear().domain([0, n - 1]).range([0, width]);
+    const y = d3.scaleLinear().domain([yMin, yMax]).range([height, 0]);
+
+    // Grid
+    const yTicks = y.ticks(6);
+    yTicks.forEach(tick => {
+      g.append('line')
+        .attr('x1', 0).attr('x2', width)
+        .attr('y1', y(tick)).attr('y2', y(tick))
+        .attr('stroke', '#1E293B').attr('stroke-width', 1);
     });
-    volumeSeries.setData(volumes);
 
-    // SMA 9 (orange)
-    const sma9Series = chart.addSeries(
-      LightweightCharts.LineSeries, {
-        color: '#FF9800', lineWidth: 1,
-        crosshairMarkerVisible: false,
-        priceLineVisible: false, lastValueVisible: false,
-      }
-    );
-    sma9Series.setData(sma9.filter(d => d.value !== null));
+    // Y labels
+    yTicks.forEach(tick => {
+      g.append('text')
+        .attr('x', -14).attr('y', y(tick))
+        .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
+        .attr('fill', '#64748B').attr('font-size', '14px')
+        .attr('font-family', 'Inter, sans-serif')
+        .text(`$${tick.toFixed(0)}`);
+    });
 
-    // SMA 20 (blue)
-    const sma20Series = chart.addSeries(
-      LightweightCharts.LineSeries, {
-        color: '#2962FF', lineWidth: 1,
-        crosshairMarkerVisible: false,
-        priceLineVisible: false, lastValueVisible: false,
-      }
-    );
-    sma20Series.setData(sma20.filter(d => d.value !== null));
+    // X labels — 5 clean dates
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const xIndices = [0, Math.floor(n*0.25), Math.floor(n*0.5),
+                      Math.floor(n*0.75), n-1];
+    xIndices.forEach(i => {
+      const d = new Date(dates[i]);
+      if (isNaN(d)) return;
+      g.append('text')
+        .attr('x', x(i)).attr('y', height + 30)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#64748B').attr('font-size', '14px')
+        .attr('font-family', 'Inter, sans-serif')
+        .text(`${months[d.getMonth()]} ${d.getDate()}`);
+    });
 
-    // BB upper
-    const bbUpSeries = chart.addSeries(
-      LightweightCharts.LineSeries, {
-        color: 'rgba(41, 98, 255, 0.4)', lineWidth: 1,
-        crosshairMarkerVisible: false,
-        priceLineVisible: false, lastValueVisible: false,
-      }
-    );
-    bbUpSeries.setData(bbUpper.filter(d => d.value !== null));
+    // Gradients
+    const defs = svg.append('defs');
 
-    // BB lower
-    const bbLowSeries = chart.addSeries(
-      LightweightCharts.LineSeries, {
-        color: 'rgba(41, 98, 255, 0.4)', lineWidth: 1,
-        crosshairMarkerVisible: false,
-        priceLineVisible: false, lastValueVisible: false,
-      }
-    );
-    bbLowSeries.setData(bbLower.filter(d => d.value !== null));
+    // Blue gradient
+    const grad = defs.append('linearGradient')
+      .attr('id', 'areaGrad').attr('x1','0').attr('y1','0').attr('x2','0').attr('y2','1');
+    grad.append('stop').attr('offset','0%').attr('stop-color','#2962FF').attr('stop-opacity',0.28);
+    grad.append('stop').attr('offset','100%').attr('stop-color','#2962FF').attr('stop-opacity',0.02);
 
-    // Fit all data into view
-    chart.timeScale().fitContent();
+    // Red gradient
+    const gradR = defs.append('linearGradient')
+      .attr('id', 'areaGradRed').attr('x1','0').attr('y1','0').attr('x2','0').attr('y2','1');
+    gradR.append('stop').attr('offset','0%').attr('stop-color','#EF4444').attr('stop-opacity',0.30);
+    gradR.append('stop').attr('offset','100%').attr('stop-color','#EF4444').attr('stop-opacity',0.03);
 
-    // Update OHLC header with last bar
-    const last = ohlc[ohlc.length - 1];
-    const prev = ohlc.length > 1 ? ohlc[ohlc.length - 2] : last;
-    const chg = last.close - prev.close;
-    const chgPct = (chg / prev.close * 100);
-    const sign = chg >= 0 ? '+' : '';
-    const color = chg >= 0 ? '#26A69A' : '#EF5350';
-    document.getElementById('h-ohlc').innerHTML =
-      `<span style="color:${color}">` +
-      `O ${last.open.toFixed(2)} &nbsp; ` +
-      `H ${last.high.toFixed(2)} &nbsp; ` +
-      `L ${last.low.toFixed(2)} &nbsp; ` +
-      `C ${last.close.toFixed(2)} &nbsp; ` +
-      `${sign}${chg.toFixed(2)} (${sign}${chgPct.toFixed(2)}%)</span>`;
+    // Red glow filter
+    const filter = defs.append('filter').attr('id', 'redGlow')
+      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
+    filter.append('feGaussianBlur').attr('in', 'SourceGraphic')
+      .attr('stdDeviation', '6').attr('result', 'blur');
+    filter.append('feMerge')
+      .selectAll('feMergeNode')
+      .data(['blur', 'SourceGraphic'])
+      .enter().append('feMergeNode')
+      .attr('in', d => d);
 
-    // Store refs for zoom animation
-    window._chart = chart;
-    window._candleSeries = candleSeries;
-  }, config);
+    // Blue glow filter
+    const blueGlow = defs.append('filter').attr('id', 'blueGlow')
+      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
+    blueGlow.append('feGaussianBlur').attr('in', 'SourceGraphic')
+      .attr('stdDeviation', '4').attr('result', 'blur');
+    blueGlow.append('feMerge')
+      .selectAll('feMergeNode')
+      .data(['blur', 'SourceGraphic'])
+      .enter().append('feMergeNode')
+      .attr('in', d => d);
 
-  // Let chart settle
-  await new Promise(r => setTimeout(r, 400));
+    // Single area + line for the full chart (all blue initially)
+    window._fullArea = g.append('path')
+      .attr('fill', 'url(#areaGrad)').attr('stroke', 'none');
+    window._fullLine = g.append('path')
+      .attr('fill', 'none').attr('stroke', '#2962FF')
+      .attr('stroke-width', 3.5).attr('stroke-linecap', 'round')
+      .attr('filter', 'url(#blueGlow)');
+
+    // Crash overlay — hidden initially, will appear during color transition
+    window._crashArea = g.append('path')
+      .attr('fill', 'url(#areaGradRed)').attr('stroke', 'none')
+      .attr('opacity', 0);
+    window._crashLine = g.append('path')
+      .attr('fill', 'none').attr('stroke', '#EF4444')
+      .attr('stroke-width', 4).attr('stroke-linecap', 'round')
+      .attr('filter', 'url(#redGlow)')
+      .attr('opacity', 0);
+
+    // Tip dot
+    window._tipDot = g.append('circle')
+      .attr('r', 5).attr('fill', '#2962FF').attr('opacity', 0);
+
+    // Store
+    window._d3 = { g, x, y, closes, width, height, margin,
+                   peakIdx: peakI, troughIdx: troughI };
+    window._drawnUpTo = 0;
+  }, config, peakIdx, troughIdx);
+
+  await new Promise(r => setTimeout(r, 300));
 
   let frameNum = 0;
   const pad = (n) => String(n).padStart(6, '0');
 
   async function captureFrames(count) {
     for (let f = 0; f < count; f++) {
-      const framePath = path.join(outputDir, `frame_${pad(frameNum)}.png`);
-      await page.screenshot({ path: framePath, type: 'png' });
+      const p = path.join(outputDir, `frame_${pad(frameNum)}.png`);
+      await page.screenshot({ path: p, type: 'png' });
       frameNum++;
     }
   }
 
-  // ══ PHASE 1: Hold on full chart — viewer reads it ══
-  console.log('  Phase 1: Full chart hold...');
-  await captureFrames(fullHoldFrames);
+  // ══ PHASE 1: Title hold ══
+  console.log('  Phase 1: Title hold...');
+  await captureFrames(titleHoldFrames);
 
-  // ══ PHASE 2: Smooth zoom into crash region ══
-  // We animate barSpacing from current (~12) up to ~40 and scroll so
-  // the shock bar is centered. This creates a smooth "zoom in" effect.
-  console.log('  Phase 2: Zoom into crash...');
+  // ══ PHASE 2: Progressive blue line draw ══
+  console.log('  Phase 2: Drawing blue line...');
 
-  const startBarSpacing = 12;
-  const endBarSpacing = 40;
-  const shockIdx = config.shockIdx;
-  const shockTime = config.ohlc[shockIdx].time;
+  let barIdx = 0;
+  while (barIdx < totalBars) {
+    const endIdx = Math.min(barIdx + barsPerFrame, totalBars);
 
-  // Get the visible range info before zoom
-  for (let f = 0; f < zoomInFrames; f++) {
-    const t = (f + 1) / zoomInFrames; // 0→1 eased
-    const ease = t * t * (3 - 2 * t);  // smoothstep
-    const spacing = startBarSpacing + (endBarSpacing - startBarSpacing) * ease;
+    await page.evaluate((upTo) => {
+      const { x, y, closes, height } = window._d3;
 
-    await page.evaluate((sp, sTime, totalBars, shockI) => {
-      window._chart.timeScale().applyOptions({ barSpacing: sp });
-      // Scroll so shock bar is roughly centered
-      // scrollToPosition takes a bar offset from the right edge
-      const visibleBars = Math.floor(1920 / sp);
-      const barsFromRight = totalBars - shockI;
-      const targetOffset = barsFromRight - Math.floor(visibleBars / 2);
-      window._chart.timeScale().scrollToPosition(-targetOffset, false);
-    }, spacing, shockTime, totalBars, shockIdx);
+      const line = d3.line()
+        .x((d, i) => x(d.idx)).y(d => y(d.val))
+        .curve(d3.curveMonotoneX);
+      const area = d3.area()
+        .x(d => x(d.idx)).y0(height).y1(d => y(d.val))
+        .curve(d3.curveMonotoneX);
 
-    await new Promise(r => setTimeout(r, 15));
-    const framePath = path.join(outputDir, `frame_${pad(frameNum)}.png`);
-    await page.screenshot({ path: framePath, type: 'png' });
+      const pts = [];
+      for (let i = 0; i < upTo; i++) pts.push({ idx: i, val: closes[i] });
+
+      window._fullArea.attr('d', area(pts));
+      window._fullLine.attr('d', line(pts));
+
+      // Tip dot
+      const tipI = upTo - 1;
+      window._tipDot
+        .attr('cx', x(tipI)).attr('cy', y(closes[tipI]))
+        .attr('opacity', 1);
+
+      window._drawnUpTo = upTo;
+    }, endIdx);
+
+    await new Promise(r => setTimeout(r, 8));
+    const p = path.join(outputDir, `frame_${pad(frameNum)}.png`);
+    await page.screenshot({ path: p, type: 'png' });
+    frameNum++;
+
+    barIdx = endIdx;
+    if (barIdx % 20 === 0) {
+      process.stdout.write(`  ${barIdx}/${totalBars} bars, ${frameNum} frames\r`);
+    }
+  }
+
+  // Hide tip dot
+  await page.evaluate(() => { window._tipDot.attr('opacity', 0); });
+
+  // ══ PHASE 3: Hold on complete blue chart ══
+  console.log('\n  Phase 3: Blue chart hold...');
+  await captureFrames(chartHoldFrames);
+
+  // ══ PHASE 4: Color transition — crash segment blue → red ══
+  console.log('  Phase 4: Crash reveal (blue → red)...');
+
+  // Pre-compute the crash segment path AND split blue paths
+  await page.evaluate((peakI, troughI) => {
+    const { g, x, y, closes, height } = window._d3;
+
+    const line = d3.line()
+      .x(d => x(d.idx)).y(d => y(d.val))
+      .curve(d3.curveMonotoneX);
+    const area = d3.area()
+      .x(d => x(d.idx)).y0(height).y1(d => y(d.val))
+      .curve(d3.curveMonotoneX);
+
+    // Crash segment
+    const crashPts = [];
+    for (let i = peakI; i <= troughI; i++) crashPts.push({ idx: i, val: closes[i] });
+    window._crashArea.attr('d', area(crashPts));
+    window._crashLine.attr('d', line(crashPts));
+
+    // Pre-crash blue segment (0 to peakIdx inclusive)
+    const prePts = [];
+    for (let i = 0; i <= peakI; i++) prePts.push({ idx: i, val: closes[i] });
+    window._preArea = g.append('path')
+      .attr('fill', 'url(#areaGrad)').attr('stroke', 'none')
+      .attr('d', area(prePts)).attr('opacity', 0);
+    window._preLine = g.append('path')
+      .attr('fill', 'none').attr('stroke', '#2962FF')
+      .attr('stroke-width', 3.5).attr('stroke-linecap', 'round')
+      .attr('filter', 'url(#blueGlow)')
+      .attr('d', line(prePts)).attr('opacity', 0);
+
+    // Post-crash blue segment (troughIdx to end)
+    const postPts = [];
+    for (let i = troughI; i < closes.length; i++) postPts.push({ idx: i, val: closes[i] });
+    window._postArea = g.append('path')
+      .attr('fill', 'url(#areaGrad)').attr('stroke', 'none')
+      .attr('d', area(postPts)).attr('opacity', 0);
+    window._postLine = g.append('path')
+      .attr('fill', 'none').attr('stroke', '#2962FF')
+      .attr('stroke-width', 3.5).attr('stroke-linecap', 'round')
+      .attr('filter', 'url(#blueGlow)')
+      .attr('d', line(postPts)).attr('opacity', 0);
+  }, peakIdx, troughIdx);
+
+  // Animate: fade OUT full blue, fade IN split blue + red crash
+  for (let f = 0; f < colorTransFrames; f++) {
+    const t = (f + 1) / colorTransFrames;
+    const ease = t * t * (3 - 2 * t);
+
+    await page.evaluate((opacity) => {
+      // Fade out the single full-blue path
+      window._fullArea.attr('opacity', 1 - opacity);
+      window._fullLine.attr('opacity', 1 - opacity);
+      // Fade in the split blue segments (pre + post crash)
+      window._preArea.attr('opacity', opacity);
+      window._preLine.attr('opacity', opacity);
+      window._postArea.attr('opacity', opacity);
+      window._postLine.attr('opacity', opacity);
+      // Fade in the red crash overlay
+      window._crashArea.attr('opacity', opacity);
+      window._crashLine.attr('opacity', opacity);
+    }, ease);
+
+    await new Promise(r => setTimeout(r, 10));
+    const p = path.join(outputDir, `frame_${pad(frameNum)}.png`);
+    await page.screenshot({ path: p, type: 'png' });
     frameNum++;
   }
 
-  // Update OHLC header to show the shock bar's data
-  const shockBar = config.ohlc[shockIdx];
-  const prevBar = shockIdx > 0 ? config.ohlc[shockIdx - 1] : shockBar;
-  await page.evaluate((bar, prev) => {
-    const chg = bar.close - prev.close;
-    const chgPct = (chg / prev.close * 100);
-    const sign = chg >= 0 ? '+' : '';
-    const color = chg >= 0 ? '#26A69A' : '#EF5350';
-    document.getElementById('h-ohlc').innerHTML =
-      `<span style="color:${color}">` +
-      `O ${bar.open.toFixed(2)} &nbsp; ` +
-      `H ${bar.high.toFixed(2)} &nbsp; ` +
-      `L ${bar.low.toFixed(2)} &nbsp; ` +
-      `C ${bar.close.toFixed(2)} &nbsp; ` +
-      `${sign}${chg.toFixed(2)} (${sign}${chgPct.toFixed(2)}%)</span>`;
-  }, shockBar, prevBar);
+  // ══ PHASE 5: Red flash + annotation ══
+  console.log('  Phase 5: Flash + annotation...');
 
-  // ══ PHASE 3: Red flash + shock annotation ══
-  console.log('  Phase 3: Shock flash + annotation...');
-
-  // Red flash
   await page.evaluate(() => {
     document.getElementById('shock-flash').style.background =
-      'rgba(239, 83, 80, 0.25)';
+      'rgba(239, 83, 80, 0.18)';
   });
   await captureFrames(flashFrames);
-
-  // Fade flash out
   await page.evaluate(() => {
     document.getElementById('shock-flash').style.background =
       'rgba(239, 83, 80, 0)';
   });
 
-  // Show annotation
   if (config.shockLabel) {
     await page.evaluate((label, sub) => {
       const ann = document.getElementById('annotation');
       document.getElementById('ann-label').textContent = label;
       if (sub) document.getElementById('ann-sub').textContent = sub;
       ann.style.display = 'block';
-      ann.style.top = '30%';
-      ann.style.right = '15%';
+      ann.style.top = '25%';
+      ann.style.right = '10%';
       ann.style.left = 'auto';
     }, config.shockLabel, config.shockSub || '');
   }
 
-  // ══ PHASE 4: Hold on zoomed crash ══
-  console.log('  Phase 4: Hold on crash...');
   await captureFrames(shockHoldFrames);
 
-  // Hide annotation
   await page.evaluate(() => {
     document.getElementById('annotation').style.display = 'none';
   });
 
-  // ══ PHASE 5: Zoom back out to full chart ══
-  console.log('  Phase 5: Zoom out...');
-  for (let f = 0; f < zoomOutFrames; f++) {
-    const t = (f + 1) / zoomOutFrames;
-    const ease = t * t * (3 - 2 * t);
-    const spacing = endBarSpacing + (startBarSpacing - endBarSpacing) * ease;
+  // ══ PHASE 6: Value badge + final hold ══
+  console.log('  Phase 6: Badge + final hold...');
 
-    await page.evaluate((sp) => {
-      window._chart.timeScale().applyOptions({ barSpacing: sp });
-      window._chart.timeScale().fitContent();
-    }, spacing);
+  const lastClose = closes[closes.length - 1];
+  const firstClose = closes[0];
+  const isUp = lastClose >= firstClose;
 
-    await new Promise(r => setTimeout(r, 15));
-    const framePath = path.join(outputDir, `frame_${pad(frameNum)}.png`);
-    await page.screenshot({ path: framePath, type: 'png' });
-    frameNum++;
-  }
+  await page.evaluate((val, up, margin) => {
+    const badge = document.getElementById('badge');
+    const { x, y, closes } = window._d3;
+    const lastIdx = closes.length - 1;
 
-  // Ensure fully fitted
-  await page.evaluate(() => {
-    window._chart.timeScale().fitContent();
-  });
-  await new Promise(r => setTimeout(r, 100));
+    badge.textContent = `$${val.toFixed(0)}`;
+    badge.style.background = up ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+    badge.style.color = up ? '#10B981' : '#EF4444';
+    badge.style.border = `1px solid ${up ? '#10B981' : '#EF4444'}`;
+    badge.style.display = 'block';
+    badge.style.left = `${margin.left + x(lastIdx) + 14}px`;
+    badge.style.top = `${margin.top + y(val) - 14}px`;
+  }, lastClose, isUp, { left: 90, top: 140 });
 
-  // ══ PHASE 6: Final hold ══
-  console.log('  Phase 6: Final hold...');
   await captureFrames(endHoldFrames);
 
   await browser.close();
 
-  const totalDuration = (frameNum / fps).toFixed(1);
-  console.log(`  ✓ ${frameNum} frames captured (${totalDuration}s @ ${fps}fps)`);
+  const dur = (frameNum / fps).toFixed(1);
+  console.log(`  ✓ ${frameNum} frames (${dur}s @ ${fps}fps)`);
 }
 
 main().catch(err => {

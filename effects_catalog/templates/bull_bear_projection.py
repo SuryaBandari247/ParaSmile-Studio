@@ -49,7 +49,7 @@ class {SCENE_CLASS}(MovingCameraScene):
     """Historical line + three projected future paths."""
 
     def construct(self):
-        self.camera.background_color = "#FFFFFF"
+        self.camera.background_color = "#0F172A"
 
         optimistic_rate = {json.dumps(optimistic_rate)}
         realistic_rate = {json.dumps(realistic_rate)}
@@ -68,7 +68,7 @@ class {SCENE_CLASS}(MovingCameraScene):
             values = [p.get("value", p.get("close", 0)) for p in pts]
 
         if len(values) < 2:
-            err = Text("Insufficient data for projection", font=FONT, font_size=28, color="#EF5350")
+            err = Text("Insufficient data for projection", font=FONT, font_size=28, color="#EF4444")
             self.play(FadeIn(err))
             self.wait(3)
             return
@@ -96,13 +96,13 @@ class {SCENE_CLASS}(MovingCameraScene):
             x_range=[0, total_x - 1, max(1, total_x // 6)],
             y_range=[y_min, y_max, (y_max - y_min) / 5],
             x_length=12, y_length=5.5,
-            axis_config={{"color": "#9598A1", "stroke_width": 1.5}},
+            axis_config={{"color": "#334155", "stroke_width": 1.5}},
             tips=False,
         )
         axes.move_to(DOWN * 0.55 + RIGHT * 0.15)
 
         if title:
-            title_mob = Text(title, font=FONT, font_size=44, color="#191919", weight=BOLD)
+            title_mob = Text(title, font=FONT, font_size=44, color="#F8FAFC", weight=BOLD)
             title_mob.to_edge(UP, buff=0.3).to_edge(LEFT, buff=0.55)
             if title_mob.width > 12:
                 title_mob.scale_to_fit_width(12)
@@ -120,15 +120,15 @@ class {SCENE_CLASS}(MovingCameraScene):
         today_x = n_hist - 1
         today_line = DashedLine(
             axes.c2p(today_x, y_min), axes.c2p(today_x, y_max),
-            color="#787B86", stroke_width=1, dash_length=0.1,
+            color="#64748B", stroke_width=1, dash_length=0.1,
         )
-        today_label = Text("Today", font_size=14, color="#787B86")
+        today_label = Text("Today", font_size=14, color="#64748B")
         today_label.next_to(axes.c2p(today_x, y_max), UP, buff=0.1)
         self.play(Create(today_line), FadeIn(today_label), run_time=0.3)
         self.wait(0.5)
 
         # Draw projection lines
-        proj_colors = ["#26A69A", "#787B86", "#EF5350"]
+        proj_colors = ["#10B981", "#64748B", "#EF4444"]
         for idx, (proj, color, label_text) in enumerate(zip(projections, proj_colors, projection_labels)):
             proj_points = [axes.c2p(today_x + i, v) for i, v in enumerate(proj)]
             proj_line = DashedLine(

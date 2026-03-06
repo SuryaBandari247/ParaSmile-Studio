@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920">
-<title>Chart</title>
+<title>Narrative Chart</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,25 +11,25 @@
     background: #0F172A;
     overflow: hidden;
     font-family: 'Inter', -apple-system, sans-serif;
+    width: 1920px; height: 1080px;
   }
-  #chart { width: 1920px; height: 1080px; }
 
-  /* ── Editorial title block — top-left ── */
+  svg { position: absolute; top: 0; left: 0; }
+
+  /* ── Editorial title — top-left ── */
   #title-block {
-    position: absolute; top: 36px; left: 48px; z-index: 10;
+    position: absolute; top: 36px; left: 56px; z-index: 10;
     max-width: 900px;
   }
   #title-block .title {
     color: #F8FAFC;
     font-size: 46px; font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.5px;
+    line-height: 1.15; letter-spacing: -0.5px;
   }
   #title-block .subtitle {
     color: #94A3B8;
     font-size: 22px; font-weight: 400;
-    margin-top: 8px;
-    line-height: 1.4;
+    margin-top: 8px; line-height: 1.4;
   }
 
   /* ── Shock flash overlay ── */
@@ -39,12 +39,11 @@
     pointer-events: none; transition: background 0.08s;
   }
 
-  /* ── Shock annotation — news-wire style ── */
+  /* ── Shock annotation ── */
   #annotation {
     position: absolute; z-index: 15;
-    font-family: 'Inter', -apple-system, sans-serif;
     display: none; padding: 10px 18px;
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.88);
     border-left: 3px solid #EF4444;
     border-radius: 0 6px 6px 0;
   }
@@ -55,14 +54,20 @@
   #annotation .sub {
     color: #CBD5E1;
     font-size: 15px; margin-top: 4px;
-    font-weight: 400;
   }
 
-  /* ── Source attribution — bottom-right ── */
+  /* ── Source ── */
   #source {
     position: absolute; bottom: 24px; right: 36px; z-index: 10;
-    color: #475569; font-size: 13px; font-weight: 400;
-    display: none;
+    color: #475569; font-size: 13px; display: none;
+  }
+
+  /* ── Value badge ── */
+  #badge {
+    position: absolute; z-index: 15; display: none;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-size: 16px; font-weight: 600;
   }
 </style>
 </head>
@@ -71,14 +76,15 @@
   <div class="title" id="t-title"></div>
   <div class="subtitle" id="t-subtitle"></div>
 </div>
-<div id="chart"></div>
+<svg id="chart" width="1920" height="1080"></svg>
 <div id="shock-flash"></div>
 <div id="annotation">
   <div class="label" id="ann-label"></div>
   <div class="sub" id="ann-sub"></div>
 </div>
 <div id="source" id="t-source"></div>
+<div id="badge"></div>
 
-<script src="./lightweight-charts.standalone.production.js"></script>
+<script src="./d3.v7.min.js"></script>
 </body>
 </html>

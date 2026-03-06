@@ -1,66 +1,35 @@
-"""Liquidity Shock (Terminal) — TradingView Lightweight Charts via Puppeteer.
+"""Liquidity Shock (Terminal) — Cinematic narrative chart via Puppeteer.
 
-Dark theme candlestick chart with volume bars, SMA 9/20, Bollinger Bands,
-OHLC header, and shock event animation. Rendered using the actual TradingView
-Lightweight Charts library through Puppeteer screenshot capture.
+Clean area-line chart on dark editorial background with smooth zoom,
+shock annotation, and title overlay. No trading indicators — storytelling only.
 
+Rendered using TradingView Lightweight Charts through Puppeteer.
 This is NOT a Manim template — it shells out to Node.js.
 For the Manim line-chart version, see liquidity_shock_simple.py.
 """
 
 from __future__ import annotations
 
+import glob
 import json
 import logging
 import os
 import subprocess
 import tempfile
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 SCENE_CLASS = "LiquidityShockTerminalScene"
-
-# This template does NOT generate Manim code.
-# It renders via Puppeteer and returns the path to the output video.
 IS_EXTERNAL_RENDERER = True
 
 
-def _compute_indicators(bars):
-    """Compute SMA 9, SMA 20, Bollinger Bands from close prices."""
-    closes = [b["close"] for b in bars]
-    n = len(closes)
-
-    def sma(period):
-        result = []
-        for i in range(n):
-            if i < period - 1:
-                result.append({"time": bars[i]["time"], "value": None})
-            else:
-                avg = sum(closes[i - period + 1:i + 1]) / period
-                result.append({"time": bars[i]["time"], "value": round(avg, 2)})
-        return result
-
-    sma9 = sma(9)
-    sma20 = sma(20)
-
-    bb_upper, bb_lower = [], []
-    for i in range(n):
-        if sma20[i]["value"] is None:
-            bb_upper.append({"time": bars[i]["time"], "value": None})
-            bb_lower.append({"time": bars[i]["time"], "value": None})
-        else:
-            window = closes[i - 19:i + 1]
-            mean = sma20[i]["value"]
-            std = (sum((x - mean) ** 2 for x in window) / 20) ** 0.5
-            bb_upper.append({"time": bars[i]["time"], "value": round(mean + 2 * std, 2)})
-            bb_lower.append({"time": bars[i]["time"], "value": round(mean - 2 * std, 2)})
-
-    return sma9, sma20, bb_upper, bb_lower
-
-
 def _build_ohlc_from_closes(dates, values):
-    """Generate synthetic OHLC + volume from close prices."""
+    """Generate synthetic OHLC from close prices.
+
+    The recorder only uses the close for the area series, but we keep
+    OHLC structure so the data format stays consistent if we ever
+    want to switch back to candlesticks for a different template.
+    """
     import random
     random.seed(42)
     bars = []
@@ -68,25 +37,20 @@ def _build_ohlc_from_closes(dates, values):
         prev = values[i - 1] if i > 0 else close
         spread = abs(close) * 0.008
         op = prev + random.uniform(-0.3, 0.3) * spread
-        body_top = max(op, close)
-        body_bot = min(op, close)
-        high = body_top + random.uniform(0.1, 0.5) * spread
-        low = body_bot - random.uniform(0.1, 0.5) * spread
-        move = abs(close - prev) / max(prev, 1) * 100
-        vol = random.uniform(25, 55) * (1 + move * 1.5)
+        high = max(op, close) + random.uniform(0.1, 0.5) * spread
+        low = min(op, close) - random.uniform(0.1, 0.5) * spread
         bars.append({
             "time": date,
             "open": round(op, 2),
             "high": round(high, 2),
             "low": round(low, 2),
             "close": round(close, 2),
-            "volume": round(vol, 1),
         })
     return bars
 
 
 def render(instruction: dict, output_path: str | None = None) -> str:
-    """Render the terminal liquidity shock via Puppeteer + Lightweight Charts.
+    """Render the narrative liquidity shock via Puppeteer + Lightweight Charts.
 
     Returns the path to the rendered .mp4 file.
     """
@@ -98,9 +62,12 @@ def render(instruction: dict, output_path: str | None = None) -> str:
     shock_label = data.get("shock_label", "")
     shock_sub = data.get("shock_caption", data.get("subtitle", ""))
     ticker = data.get("ticker", "ASML")
-    exchange = data.get("exchange", "NasdaqGS")
-    interval = data.get("interval_label", "1D")
+    source = data.get("source", "")
     fps = int(data.get("fps", 30))
+
+    # Editorial metadata
+    title = instruction.get("title", f"{ticker}")
+    subtitle = data.get("subtitle", "")
 
     # Resolve series → dates/values if needed
     if series and not values:
@@ -112,7 +79,7 @@ def render(instruction: dict, output_path: str | None = None) -> str:
     if len(values) < 2:
         raise ValueError(f"Insufficient data: {len(values)} points")
 
-    # Build OHLC bars
+    # Build OHLC bars (recorder uses .close for area series)
     bars = _build_ohlc_from_closes(dates, values)
 
     # Find shock index
@@ -122,34 +89,16 @@ def render(instruction: dict, output_path: str | None = None) -> str:
             shock_idx = i
             break
 
-    # Compute indicators
-    sma9, sma20, bb_upper, bb_lower = _compute_indicators(bars)
-
-    # Build volumes
-    volumes = []
-    for b in bars:
-        is_up = b["close"] >= b["open"]
-        volumes.append({
-            "time": b["time"],
-            "value": b["volume"],
-            "color": "rgba(38, 166, 154, 0.5)" if is_up else "rgba(239, 83, 80, 0.5)",
-        })
-
-    # Build config JSON for the Puppeteer recorder
+    # Clean config — no indicators, no volume
     config = {
         "ohlc": bars,
-        "volumes": volumes,
-        "sma9": sma9,
-        "sma20": sma20,
-        "bbUpper": bb_upper,
-        "bbLower": bb_lower,
+        "title": title,
+        "subtitle": subtitle,
+        "source": source,
         "ticker": ticker,
-        "exchange": exchange,
-        "interval": interval,
         "shockIdx": shock_idx,
         "shockLabel": shock_label,
         "shockSub": shock_sub,
-        "animDelayMs": 80,
     }
 
     # Write config to temp file
@@ -191,10 +140,8 @@ def render(instruction: dict, output_path: str | None = None) -> str:
         raise RuntimeError(f"FFmpeg failed:\n{ff.stderr[-500:]}")
 
     # Cleanup frames
-    import glob
     for frame in glob.glob(os.path.join(frames_dir, "frame_*.png")):
         os.unlink(frame)
-    # Remove data file and dir
     try:
         os.unlink(data_path)
         os.rmdir(frames_dir)
@@ -206,12 +153,7 @@ def render(instruction: dict, output_path: str | None = None) -> str:
 
 
 def generate(instruction: dict) -> str:
-    """For backward compatibility — returns a stub Manim scene that does nothing.
-
-    The real rendering happens via render() which calls Puppeteer.
-    Use render() directly for the terminal variant.
-    """
-    # Return minimal Manim stub so the effects catalog doesn't break
+    """Backward compat stub — use render() directly."""
     return f'''from manim import *
 
 class {SCENE_CLASS}(Scene):
