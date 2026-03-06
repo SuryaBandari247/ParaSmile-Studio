@@ -103,15 +103,126 @@ def make_aurora_field(time_s: float, intensity: float) -> Image.Image:
     return Image.fromarray(arr)
 
 
+def make_candlestick_motif(time_s: float, opacity: float) -> Image.Image:
+    """Draw a subtle candlestick chart motif — sits behind the text.
+
+    A short series of candlesticks with a gentle uptrend, drawn in very
+    low opacity so it reads as a background texture, not a real chart.
+    The candles draw left-to-right progressively based on time.
+    """
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    if opacity <= 0:
+        return layer
+
+    draw = ImageDraw.Draw(layer)
+
+    # Generate candles procedurally — random heights with gentle uptrend
+    rng = np.random.RandomState(7)  # fixed seed for reproducibility
+    n = 55
+    candles = []
+    price = 40.0
+    for _ in range(n):
+        move = rng.uniform(-5, 6)  # bigger swings
+        o = price
+        c = price + move
+        wick_up = abs(rng.uniform(2, 8))
+        wick_dn = abs(rng.uniform(2, 8))
+        h = max(o, c) + wick_up
+        l = min(o, c) - wick_dn
+        candles.append((o, c, h, l))
+        price = c + rng.uniform(-1, 1)
+
+    # Chart area: centered behind the text, tighter spacing
+    chart_w = 1300
+    chart_h = 500
+    chart_x = (W - chart_w) // 2
+    chart_y = (H - chart_h) // 2
+
+    candle_w = chart_w // n
+    body_w = max(4, int(candle_w * 0.55))  # fatter bodies, tighter gaps
+
+    # Price range for scaling
+    all_vals = [v for c in candles for v in c]
+    p_min, p_max = min(all_vals), max(all_vals)
+    p_range = p_max - p_min or 1
+
+    def price_to_y(p):
+        return int(chart_y + chart_h - (p - p_min) / p_range * chart_h)
+
+    # Progressive reveal: candles appear left to right
+    # Slower reveal — all candles visible by 3.2s so each has time to grow
+    visible_frac = min(1.0, time_s / 3.2)
+    visible_count = int(visible_frac * n) + 1
+    visible_count = min(visible_count, n)
+
+    base_alpha = int(opacity * 35)
+
+    # Per-candle growth: each candle gets its own birth time and grows over 0.5s
+    for idx in range(visible_count):
+        o, c, h, l = candles[idx]
+        cx = chart_x + idx * candle_w + candle_w // 2
+
+        # When did this candle first appear?
+        birth_time = (idx / n) * 3.2
+        age = time_s - birth_time  # how long it's been alive
+        grow = min(1.0, max(0.0, age / 0.5))  # 0→1 over 0.5 seconds
+        grow = 1.0 - (1.0 - grow) ** 3  # ease-out cubic for snappy start, smooth finish
+
+        a = int(base_alpha * min(1.0, grow * 1.2))
+
+        if a <= 0 or grow <= 0:
+            continue
+
+        is_green = c >= o
+        color = (16, 185, 129, a) if is_green else (239, 68, 68, a)
+
+        # Compute full positions
+        y_high = price_to_y(h)
+        y_low = price_to_y(l)
+        y_top = price_to_y(max(o, c))
+        y_bot = price_to_y(min(o, c))
+        if y_bot - y_top < 2:
+            y_bot = y_top + 2
+
+        # Grow from vertical center
+        mid_wick = (y_high + y_low) / 2
+        mid_body = (y_top + y_bot) / 2
+
+        wick_y1 = int(mid_wick - (mid_wick - y_high) * grow)
+        wick_y2 = int(mid_wick + (y_low - mid_wick) * grow)
+        body_y1 = int(mid_body - (mid_body - y_top) * grow)
+        body_y2 = int(mid_body + (y_bot - mid_body) * grow)
+        if body_y2 - body_y1 < 1:
+            body_y2 = body_y1 + 1
+
+        # Wick
+        wick_color = (*color[:3], max(1, a // 2))
+        draw.line([(cx, wick_y1), (cx, wick_y2)], fill=wick_color, width=1)
+
+        # Body
+        draw.rectangle(
+            [cx - body_w // 2, body_y1, cx + body_w // 2, body_y2],
+            fill=color,
+        )
+
+    return layer
+
+
 def create_glass_frame(
     text_mask: Image.Image,
     bg: Image.Image,
     reveal: float,
     sweep_x: float | None,
     glow_strength: float,
+    candle_layer: Image.Image | None = None,
 ) -> Image.Image:
     """Render one frame of the dark glassmorphism effect."""
     frame = bg.copy().convert("RGBA")
+
+    # Composite candlestick motif behind text
+    if candle_layer is not None:
+        frame = Image.alpha_composite(frame, candle_layer)
+
     mask_arr = np.array(text_mask).astype(np.float32) / 255.0
 
     if reveal <= 0:
@@ -297,7 +408,11 @@ def render_all_frames():
             pulse = 0.5 + 0.15 * math.sin((time_s - 2.8) * 2.5)
             glow = 0.8 * pulse + 0.4
 
-        frame = create_glass_frame(text_mask, bg, reveal, sweep_x, glow)
+        # ── Candlestick motif (fades in with reveal) ──
+        candle_opacity = reveal  # tied to text reveal
+        candle_layer = make_candlestick_motif(time_s, candle_opacity)
+
+        frame = create_glass_frame(text_mask, bg, reveal, sweep_x, glow, candle_layer)
         frame.save(os.path.join(FRAMES_DIR, f"frame_{i:04d}.png"))
 
         if (i + 1) % 30 == 0 or i == TOTAL_FRAMES - 1:
